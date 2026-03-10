@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Curriculum Builder — LearNova</title>
+    <meta name="description" content="Build your course curriculum with AI-powered document processing on LearNova." />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <!-- PDF.js for client-side PDF parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        :root {
+            --sidebar-w: 240px;
+        }
+
+        .ln-modal.open,
+        .ln-overlay.open {
+            display: block !important;
+        }
+
+        /* ── Layout ─────────────────────────────────────────────── */
+        .curic-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ─────────────────────────────────────────────── */
+        .dash-sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: var(--bg-sidebar, #0a0f1e);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .logo span {
+            color: var(--clr-emerald, #10B981);
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .25);
+            padding: var(--sp-4) var(--sp-3) var(--sp-2);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, .6);
+            font-size: var(--text-sm);
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, .07);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--grad-emerald, linear-gradient(135deg, #059669, #10B981));
+            color: #fff;
+        }
+
+        .sidebar-link .icon {
+            width: 22px;
+            text-align: center;
+        }
+
+        /* ── Main content ──────────────────────────────────────── */
+        .curic-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-page, #060d1f);
+        }
+
+        /* ── Top header bar ────────────────────────────────────── */
+        .curic-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--sp-5) var(--sp-8);
+            background: var(--bg-card, #0d1b38);
+            border-bottom: 1px solid var(--bdr-subtle, rgba(255, 255, 255, .08));
+            gap: var(--sp-4);
+            flex-wrap: wrap;
+        }
+
+        .curic-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4);
+        }
+
+        .curic-back {
+            color: rgba(255, 255, 255, .5);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .curic-back:hover {
+            color: #fff;
+        }
+
+        .curic-course-info h1 {
+            font-size: var(--text-xl);
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .curic-course-info p {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin: 2px 0 0;
+        }
+
+        .curic-topbar-actions {
+            display: flex;
+            gap: var(--sp-3);
+            align-items: center;
+        }
+
+        /* ── Split body ─────────────────────────────────────────── */
+        .curic-body {
+            flex: 1;
+            display: flex;
+            gap: 0;
+            min-height: 0;
+        }
+
+        /* ── Module list panel ──────────────────────────────────── */
+        .module-panel {
+            width: 360px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--bdr-subtle, rgba(255, 255, 255, .08));
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 72px);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: var(--sp-4) var(--sp-5);
+            border-bottom: 1px solid var(--bdr-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-header h3 {
+            font-size: var(--text-base);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .module-count {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            background: var(--bg-card-hover);
+            padding: 2px 8px;
+            border-radius: 99px;
+        }
+
+        .module-list-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--sp-3);
+        }
+
+        .module-item {
+            border-radius: var(--radius-lg);
+            padding: var(--sp-4);
+            margin-bottom: var(--sp-2);
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--sp-3);
+            background: var(--bg-card, #0d1b38);
+        }
+
+        .module-item:hover {
+            border-color: var(--bdr-accent, rgba(16, 185, 129, .3));
+        }
+
+        .module-item.selected {
+            border-color: var(--clr-emerald, #10B981);
+            background: rgba(16, 185, 129, .08);
+        }
+
+        .module-num {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-card-hover);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            flex-shrink: 0;
+        }
+
+        .module-item.selected .module-num {
+            background: var(--clr-emerald);
+            color: #fff;
+        }
+
+        .module-item-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .module-item-title {
+            font-weight: 600;
+            font-size: var(--text-sm);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .module-item-meta {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 2px;
+            display: flex;
+            gap: var(--sp-2);
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .type-lesson {
+            background: rgba(59, 130, 246, .15);
+            color: #60a5fa;
+        }
+
+        .type-video {
+            background: rgba(239, 68, 68, .15);
+            color: #f87171;
+        }
+
+        .type-quiz {
+            background: rgba(168, 85, 247, .15);
+            color: #c084fc;
+        }
+
+        .type-exercise {
+            background: rgba(245, 158, 11, .15);
+            color: #fbbf24;
+        }
+
+        .module-item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .module-item:hover .module-item-actions {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            width: 26px;
+            height: 26px;
+            border: none;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            background: var(--bg-card-hover);
+            color: var(--txt-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(239, 68, 68, .2);
+            color: #f87171;
+        }
+
+        .icon-btn.edit:hover {
+            background: rgba(16, 185, 129, .2);
+            color: var(--clr-emerald);
+        }
+
+        /* ── Editor panel ───────────────────────────────────────── */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 72px);
+            overflow: hidden;
+        }
+
+        .editor-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--txt-muted);
+            padding: var(--sp-8);
+            text-align: center;
+        }
+
+        .editor-empty .big-icon {
+            font-size: 4rem;
+            margin-bottom: var(--sp-4);
+        }
+
+        .editor-empty h3 {
+            font-size: var(--text-xl);
+            margin: 0 0 var(--sp-2);
+        }
+
+        .editor-empty p {
+            font-size: var(--text-sm);
+            max-width: 320px;
+        }
+
+        .editor-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-content.visible {
+            display: flex;
+        }
+
+        .editor-topbar {
+            padding: var(--sp-4) var(--sp-6);
+            border-bottom: 1px solid var(--bdr-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .editor-field {
+            padding: var(--sp-4) var(--sp-6);
+            border-bottom: 1px solid var(--bdr-subtle);
+        }
+
+        .editor-field label {
+            display: block;
+            font-size: var(--text-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--txt-muted);
+            margin-bottom: var(--sp-2);
+        }
+
+        .editor-field input,
+        .editor-field select {
+            width: 100%;
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--bg-card-hover);
+            border: 1.5px solid var(--bdr-subtle);
+            border-radius: var(--radius-md);
+            color: var(--txt-primary);
+            font-size: var(--text-sm);
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .editor-field input:focus,
+        .editor-field select:focus {
+            border-color: var(--clr-emerald);
+        }
+
+        .editor-fields-row {
+            display: flex;
+            gap: 0;
+        }
+
+        .editor-fields-row .editor-field {
+            flex: 1;
+        }
+
+        .editor-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-body textarea {
+            flex: 1;
+            resize: none;
+            width: 100%;
+            padding: var(--sp-6);
+            background: var(--bg-page);
+            border: none;
+            color: var(--txt-primary);
+            font-size: var(--text-sm);
+            font-family: 'Inter', monospace;
+            outline: none;
+            line-height: 1.7;
+        }
+
+        .editor-actions {
+            padding: var(--sp-4) var(--sp-6);
+            border-top: 1px solid var(--bdr-subtle);
+            display: flex;
+            gap: var(--sp-3);
+            justify-content: flex-end;
+        }
+
+        /* ── AI Upload zone ─────────────────────────────────────── */
+        .ai-upload-zone {
+            border: 2px dashed rgba(16, 185, 129, .35);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-10) var(--sp-8);
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s;
+            background: rgba(16, 185, 129, .03);
+            margin: var(--sp-4) var(--sp-5);
+        }
+
+        .ai-upload-zone:hover {
+            border-color: var(--clr-emerald);
+            background: rgba(16, 185, 129, .08);
+        }
+
+        .ai-upload-zone.dragover {
+            border-color: var(--clr-emerald);
+            background: rgba(16, 185, 129, .12);
+            transform: scale(1.01);
+        }
+
+        .ai-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--sp-3);
+        }
+
+        .ai-upload-zone h4 {
+            margin: 0 0 var(--sp-2);
+            font-size: var(--text-base);
+        }
+
+        .ai-upload-zone p {
+            margin: 0;
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+        }
+
+        /* ── AI progress indicator ──────────────────────────────── */
+        .ai-progress {
+            display: none;
+            padding: var(--sp-4) var(--sp-5);
+            background: rgba(16, 185, 129, .06);
+            border: 1px solid rgba(16, 185, 129, .2);
+            border-radius: var(--radius-lg);
+            margin: var(--sp-3) var(--sp-5);
+        }
+
+        .ai-progress.show {
+            display: block;
+        }
+
+        .ai-progress-bar {
+            height: 4px;
+            background: var(--bdr-subtle);
+            border-radius: 99px;
+            margin-top: var(--sp-2);
+            overflow: hidden;
+        }
+
+        .ai-progress-fill {
+            height: 100%;
+            background: var(--grad-emerald, linear-gradient(90deg, #059669, #34d399));
+            border-radius: 99px;
+            transition: width .4s ease;
+        }
+
+        /* ── Preview modal ───────────────────────────────────────── */
+        .preview-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .preview-item {
+            padding: var(--sp-4);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--sp-3);
+            display: flex;
+            gap: var(--sp-3);
+            align-items: flex-start;
+        }
+
+        .preview-item .pi-num {
+            width: 28px;
+            height: 28px;
+            background: var(--grad-emerald);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-xs);
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .preview-item .pi-info {
+            flex: 1;
+        }
+
+        .preview-item .pi-title {
+            font-weight: 700;
+            font-size: var(--text-sm);
+        }
+
+        .preview-item .pi-desc {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 2px;
+        }
+
+        /* ── Empty module list CTA ──────────────────────────────── */
+        .module-empty {
+            text-align: center;
+            padding: var(--sp-8) var(--sp-4);
+            color: var(--txt-muted);
+        }
+
+        .module-empty p {
+            font-size: var(--text-sm);
+            margin-bottom: var(--sp-4);
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <div class="curic-layout">
+
+        <!-- ══ Sidebar ══ -->
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">LearNova<span>.</span></div>
+            </div>
+            <nav style="padding: var(--sp-4) var(--sp-3); flex: 1;">
+                <div class="sidebar-section-label">Instructor</div>
+                <a href="teacher.html" class="sidebar-link"><span class="icon">📊</span>Dashboard</a>
+                <a href="teacher-courses.html" class="sidebar-link active"><span class="icon">📚</span>My Courses</a>
+                <a href="teacher-students.html" class="sidebar-link"><span class="icon">👥</span>Students</a>
+                <a href="teacher-sessions.html" class="sidebar-link"><span class="icon">📅</span>Sessions</a>
+                <a href="teacher-revenue.html" class="sidebar-link"><span class="icon">💰</span>Revenue</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <!-- ══ Main ══ -->
+        <div class="curic-main">
+
+            <!-- Top bar -->
+            <div class="curic-topbar">
+                <div class="curic-topbar-left">
+                    <a href="teacher-courses.html" class="curic-back">← Back</a>
+                    <div class="curic-course-info">
+                        <h1 id="course-title-display">Loading…</h1>
+                        <p id="course-category-display">Curriculum Builder</p>
+                    </div>
+                </div>
+                <div class="curic-topbar-actions">
+                    <span id="course-status-badge" class="badge badge-amber">⏸ Draft</span>
+                    <button class="btn btn-ghost btn-sm" id="publish-btn" onclick="togglePublish()">🚀 Publish
+                        Course</button>
+                    <button class="btn btn-secondary btn-sm" id="ai-upload-btn"
+                        title="Upload PDF / DOCX and auto-generate modules">
+                        🤖 AI Generate
+                    </button>
+                    <button class="btn btn-emerald btn-sm" onclick="openModuleEditor()">
+                        ➕ Add Module
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI progress indicator -->
+            <div class="ai-progress" id="ai-progress">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span id="ai-progress-label" style="font-size:var(--text-sm);font-weight:600">🤖 Analysing
+                        document…</span>
+                    <span id="ai-progress-pct" style="font-size:var(--text-xs);color:var(--txt-muted)">0%</span>
+                </div>
+                <div class="ai-progress-bar">
+                    <div class="ai-progress-fill" id="ai-progress-fill" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- Hidden file input -->
+            <input type="file" id="doc-upload-input" accept=".pdf,.txt,.md,.docx" style="display:none" />
+
+            <!-- Body -->
+            <div class="curic-body">
+
+                <!-- Module list panel -->
+                <div class="module-panel">
+                    <div class="panel-header">
+                        <h3>Curriculum</h3>
+                        <span class="module-count" id="module-count">0 modules</span>
+                    </div>
+
+                    <!-- AI upload zone (shown when empty OR by button) -->
+                    <div class="ai-upload-zone" id="ai-drop-zone">
+                        <div class="ai-icon">📄✨</div>
+                        <h4>Drop a document here</h4>
+                        <p>Upload PDF, TXT, or Markdown — LearNova AI will generate your entire curriculum
+                            automatically.</p>
+                        <br>
+                        <button class="btn btn-emerald btn-sm" id="browse-btn">Browse files</button>
+                    </div>
+
+                    <div class="module-list-scroll" id="module-list-scroll" style="display:none;">
+                        <!-- modules rendered here -->
+                    </div>
+
+                    <div class="module-empty" id="module-empty" style="display:none;">
+                        <p>No modules yet.</p>
+                        <button class="btn btn-ghost btn-sm" onclick="openModuleEditor()">➕ Add your first
+                            module</button>
+                    </div>
+                </div>
+
+                <!-- Editor panel -->
+                <div class="editor-panel">
+                    <div class="editor-empty" id="editor-empty">
+                        <div class="big-icon">📝</div>
+                        <h3>Select a module to edit</h3>
+                        <p>Click any module on the left to edit its content, or use "AI Generate" to auto-create your
+                            whole curriculum from a document.</p>
+                    </div>
+
+                    <div class="editor-content" id="editor-content">
+                        <div class="editor-topbar">
+                            <div>
+                                <span style="font-size:var(--text-sm);font-weight:700;" id="editor-module-num">Module
+                                    1</span>
+                                <span
+                                    style="font-size:var(--text-xs);color:var(--txt-muted);margin-left:var(--sp-2)">Editing</span>
+                            </div>
+                            <div style="display:flex;gap:var(--sp-2)">
+                                <button class="btn btn-ghost btn-xs" id="delete-module-btn">🗑 Delete</button>
+                            </div>
+                        </div>
+                        <div class="editor-field">
+                            <label>Module Title</label>
+                            <input id="editor-title" type="text" placeholder="e.g. Introduction to the fundamentals…" />
+                        </div>
+                        <div class="editor-fields-row">
+                            <div class="editor-field" style="border-right:1px solid var(--bdr-subtle)">
+                                <label>Type</label>
+                                <select id="editor-type">
+                                    <option value="lesson">📄 Lesson</option>
+                                    <option value="video">🎬 Video</option>
+                                    <option value="quiz">❓ Quiz</option>
+                                    <option value="exercise">🧩 Exercise</option>
+                                </select>
+                            </div>
+                            <div class="editor-field">
+                                <label>Duration (minutes)</label>
+                                <input id="editor-duration" type="number" value="15" min="1" max="300" />
+                            </div>
+                        </div>
+                        <div class="editor-body">
+                            <textarea id="editor-body-text"
+                                placeholder="Write lesson content in HTML, paste a video URL, or describe exercise instructions…"></textarea>
+                        </div>
+                        <div class="editor-actions">
+                            <div id="editor-status"
+                                style="font-size:var(--text-xs);color:var(--txt-muted);align-self:center;margin-right:auto">
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="closeEditor()">Cancel</button>
+                            <button class="btn btn-emerald btn-sm" id="save-module-btn">💾 Save Module</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ AI Preview Modal ══ -->
+    <div id="ai-preview-overlay"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;backdrop-filter:blur(6px)"
+        class="ln-overlay"></div>
+    <div id="ai-preview-modal"
+        style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;width:min(640px,96vw);background:var(--bg-card);border:1px solid var(--bdr-subtle);border-radius:var(--radius-xl);padding:var(--sp-8);box-shadow:var(--shadow-xl);max-height:88vh;overflow-y:auto"
+        class="ln-modal">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)">
+            <h3 style="margin:0">🤖 AI-Generated Curriculum</h3>
+            <button onclick="closeAiPreview()"
+                style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt-muted)">&times;</button>
+        </div>
+        <p style="font-size:var(--text-sm);color:var(--txt-muted);margin-bottom:var(--sp-5)" id="ai-modal-summary"></p>
+        <ul class="preview-list" id="ai-preview-list"></ul>
+        <div style="display:flex;gap:var(--sp-3);margin-top:var(--sp-6);justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="closeAiPreview()">Discard</button>
+            <button class="btn btn-emerald btn-sm" id="confirm-ai-btn">✅ Import All Modules</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/theme.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/teacher-dashboard.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════
+        //  Curriculum Page Script
+        // ═══════════════════════════════════════════════════════
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+        const courseId = new URLSearchParams(window.location.search).get('course');
+        let modules = []; // local state
+        let selectedModuleId = null;
+        let aiGeneratedModules = [];
+
+        // ── UI helpers ─────────────────────────────────────────
+        function setProgress(label, pct) {
+            document.getElementById('ai-progress').classList.add('show');
+            document.getElementById('ai-progress-label').textContent = label;
+            document.getElementById('ai-progress-pct').textContent = pct + '%';
+            document.getElementById('ai-progress-fill').style.width = pct + '%';
+        }
+        function hideProgress() { document.getElementById('ai-progress').classList.remove('show'); }
+
+        function updateModuleCount() {
+            const el = document.getElementById('module-count');
+            if (el) el.textContent = modules.length + ' module' + (modules.length !== 1 ? 's' : '');
+        }
+
+        // ── Render module list panel ───────────────────────────
+        function renderModuleList() {
+            updateModuleCount();
+            const scroll = document.getElementById('module-list-scroll');
+            const empty = document.getElementById('module-empty');
+            const dropZone = document.getElementById('ai-drop-zone');
+
+            if (modules.length === 0) {
+                scroll.style.display = 'none';
+                dropZone.style.display = 'block';
+                empty.style.display = 'none';
+                return;
+            }
+
+            dropZone.style.display = 'none';
+            scroll.style.display = 'block';
+            empty.style.display = 'none';
+
+            const typeIcon = { lesson: '📄', video: '🎬', quiz: '❓', exercise: '🧩' };
+
+            scroll.innerHTML = modules.map((m, i) => `
+        <div class="module-item ${m.id === selectedModuleId ? 'selected' : ''}" onclick="selectModule('${m.id}')">
+            <div class="module-num">${i + 1}</div>
+            <div class="module-item-body">
+                <div class="module-item-title">${m.title}</div>
+                <div class="module-item-meta">
+                    <span class="type-badge type-${m.type}">${typeIcon[m.type] || '📄'} ${m.type}</span>
+                    <span>${m.duration_minutes} min</span>
+                </div>
+            </div>
+            <div class="module-item-actions">
+                <button class="icon-btn edit" title="Edit" onclick="event.stopPropagation();selectModule('${m.id}')">✏️</button>
+                <button class="icon-btn" title="Delete" onclick="event.stopPropagation();deleteModuleById('${m.id}')">🗑</button>
+            </div>
+        </div>
+    `).join('');
+
+            // Add module button at bottom
+            scroll.innerHTML += `<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:var(--sp-2)" onclick="openModuleEditor()">➕ Add Module</button>`;
+        }
+
+        // ── Module editor ──────────────────────────────────────
+        function selectModule(id) {
+            selectedModuleId = id;
+            const m = modules.find(m => m.id === id);
+            if (!m) return;
+
+            renderModuleList(); // refresh selection highlight
+
+            const idx = modules.indexOf(m) + 1;
+            document.getElementById('editor-module-num').textContent = 'Module ' + idx;
+            document.getElementById('editor-title').value = m.title;
+            document.getElementById('editor-type').value = m.type;
+            document.getElementById('editor-duration').value = m.duration_minutes;
+            document.getElementById('editor-body-text').value = m.content || '';
+            document.getElementById('editor-status').textContent = '';
+
+            document.getElementById('editor-empty').style.display = 'none';
+            document.getElementById('editor-content').classList.add('visible');
+
+            document.getElementById('save-module-btn').onclick = () => saveSelectedModule(id);
+            document.getElementById('delete-module-btn').onclick = () => deleteModuleById(id);
+        }
+
+        function openModuleEditor() {
+            // Opens editor for a brand-new module (temp id)
+            const tempId = 'new-' + Date.now();
+            const newMod = { id: tempId, course_id: courseId, title: '', type: 'lesson', duration_minutes: 15, content: '', order_index: modules.length + 1, _isNew: true };
+            modules.push(newMod);
+            renderModuleList();
+            selectModule(tempId);
+        }
+
+        function closeEditor() {
+            // If new & unsaved, remove
+            modules = modules.filter(m => !m._isNew);
+            selectedModuleId = null;
+            renderModuleList();
+            document.getElementById('editor-content').classList.remove('visible');
+            document.getElementById('editor-empty').style.display = 'flex';
+        }
+
+        async function saveSelectedModule(id) {
+            const btn = document.getElementById('save-module-btn');
+            const statusEl = document.getElementById('editor-status');
+            btn.disabled = true; btn.textContent = '💾 Saving…';
+            statusEl.textContent = '';
+
+            const title = document.getElementById('editor-title').value.trim();
+            if (!title) { btn.disabled = false; btn.textContent = '💾 Save Module'; statusEl.textContent = '⚠️ Title is required'; return; }
+
+            const payload = {
+                course_id: courseId,
+                title,
+                type: document.getElementById('editor-type').value,
+                duration_minutes: parseInt(document.getElementById('editor-duration').value) || 15,
+                content: document.getElementById('editor-body-text').value.trim(),
+            };
+
+            const m = modules.find(m => m.id === id);
+            let error, saved;
+
+            if (m?._isNew) {
+                const { count } = await supabaseClient.from('course_modules').select('id', { count: 'exact', head: true }).eq('course_id', courseId);
+                payload.order_index = (count || 0) + 1;
+                ({ data: saved, error } = await supabaseClient.from('course_modules').insert(payload).select().single());
+            } else {
+                ({ data: saved, error } = await supabaseClient.from('course_modules').update(payload).eq('id', id).select().single());
+            }
+
+            btn.disabled = false; btn.textContent = '💾 Save Module';
+
+            if (error) {
+                statusEl.style.color = '#f87171';
+                statusEl.textContent = '✗ ' + error.message;
+            } else {
+                statusEl.style.color = 'var(--clr-emerald)';
+                statusEl.textContent = '✓ Saved!';
+                // Update local state and sync IDs (especially for _isNew modules)
+                const idx = modules.findIndex(m => m.id === id);
+                if (idx !== -1) {
+                    modules[idx] = { ...saved };
+                    selectedModuleId = saved.id; // Sync the selected ID to the new UUID
+                }
+                renderModuleList();
+                // Re-highlight the newly saved module
+                document.querySelectorAll('.module-item').forEach((el, i) => {
+                    if (modules[i]?.id === saved.id) el.classList.add('selected');
+                });
+            }
+        }
+
+        async function deleteModuleById(id) {
+            if (!confirm('Delete this module? This cannot be undone.')) return;
+            const m = modules.find(m => m.id === id);
+            if (!m?._isNew) {
+                const { error } = await supabaseClient.from('course_modules').delete().eq('id', id);
+                if (error) { alert('Error: ' + error.message); return; }
+            }
+            modules = modules.filter(m => m.id !== id);
+            if (selectedModuleId === id) {
+                selectedModuleId = null;
+                document.getElementById('editor-content').classList.remove('visible');
+                document.getElementById('editor-empty').style.display = 'flex';
+            }
+            renderModuleList();
+        }
+
+        // ── AI Document Processing ─────────────────────────────
+        async function handleFileUpload(file) {
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+            let text = '';
+
+            setProgress('📂 Reading file…', 5);
+
+            try {
+                if (ext === 'pdf') {
+                    text = await extractTextFromPDF(file);
+                } else {
+                    text = await file.text();
+                }
+            } catch (e) {
+                hideProgress();
+                alert('Could not read file: ' + e.message);
+                return;
+            }
+
+            setProgress('🧠 Analysing structure…', 40);
+            await delay(400);
+
+            const generated = generateModulesFromText(text, file.name);
+
+            setProgress('✨ Building curriculum preview…', 90);
+            await delay(300);
+
+            hideProgress();
+            showAiPreview(generated, file.name);
+        }
+
+        async function extractTextFromPDF(file) {
+            const buffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                setProgress(`📄 Reading page ${i} of ${pdf.numPages}…`, 5 + Math.round(30 * i / pdf.numPages));
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                fullText += content.items.map(s => s.str).join(' ') + '\n';
+            }
+            return fullText;
+        }
+
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function generateModulesFromText(text, filename) {
+            // Smart heuristic: detect headings by pattern matching
+            const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+            const sections = [];
+
+            const headingPatterns = [
+                /^(chapter|unit|module|lesson|section|part|topic|week)\s+\d+[\s:\-–]/i,
+                /^\d+\.\s+[A-Z][^a-z]{0,3}/,
+                /^[IVX]+\.\s+[A-Z]/,
+                /^#{1,3}\s+.+/,
+                /^[A-Z][A-Z\s]{8,50}$/,
+            ];
+
+            let current = null;
+            const chunks = [];
+
+            for (const line of lines) {
+                const isHeading = headingPatterns.some(p => p.test(line));
+                if (isHeading && line.length < 120) {
+                    if (current) chunks.push(current);
+                    current = { heading: line.replace(/^#+\s*/, '').trim(), body: [] };
+                } else if (current) {
+                    current.body.push(line);
+                }
+            }
+            if (current) chunks.push(current);
+
+            // Fallback: split every ~400 words if no headings detected
+            if (chunks.length < 2) {
+                const words = text.split(/\s+/);
+                const chunkSize = Math.max(200, Math.ceil(words.length / 8));
+                const baseName = filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+                for (let i = 0; i < words.length; i += chunkSize) {
+                    const num = Math.floor(i / chunkSize) + 1;
+                    chunks.push({
+                        heading: `${baseName} — Part ${num}`,
+                        body: words.slice(i, i + chunkSize)
+                    });
+                }
+            }
+
+            // Convert to module objects
+            return chunks.slice(0, 20).map((c, i) => ({
+                order_index: i + 1,
+                title: cleanHeading(c.heading),
+                type: guessType(c.heading),
+                duration_minutes: estimateDuration(c.body),
+                content: formatContent(c.heading, c.body),
+            }));
+        }
+
+        function cleanHeading(h) {
+            return h
+                .replace(/^(chapter|unit|module|lesson|section|part|topic|week)\s+\d+[\s:\-–]*/i, '')
+                .replace(/^\d+\.\s*/, '')
+                .replace(/^#+\s*/, '')
+                .replace(/^[IVX]+\.\s*/, '')
+                .trim()
+                || h;
+        }
+
+        function guessType(heading) {
+            if (/quiz|test|assessment|exercise|practice|challenge/i.test(heading)) return 'exercise';
+            if (/video|watch|demo|screencast|recording/i.test(heading)) return 'video';
+            if (/quiz|questions|review|exam/i.test(heading)) return 'quiz';
+            return 'lesson';
+        }
+
+        function estimateDuration(bodyArr) {
+            const words = Array.isArray(bodyArr) ? bodyArr.join(' ').split(/\s+/).length : 0;
+            return Math.max(5, Math.min(60, Math.round(words / 130)));
+        }
+
+        function formatContent(heading, bodyArr) {
+            const body = (Array.isArray(bodyArr) ? bodyArr.join(' ') : '').substring(0, 1200);
+            if (!body.trim()) return `<h2>${cleanHeading(heading)}</h2><p>No content extracted — add your lesson content here.</p>`;
+            return `<h2>${cleanHeading(heading)}</h2>\n<p>${body}</p>`;
+        }
+
+        // ── AI Preview Modal ───────────────────────────────────
+        function showAiPreview(mods, filename) {
+            aiGeneratedModules = mods;
+            document.getElementById('ai-modal-summary').textContent =
+                `Found ${mods.length} sections in "${filename}". Review below, then import to your curriculum.`;
+
+            const list = document.getElementById('ai-preview-list');
+            const typeIcon = { lesson: '📄', video: '🎬', quiz: '❓', exercise: '🧩' };
+            list.innerHTML = mods.map((m, i) => `
+        <li class="preview-item">
+            <div class="pi-num">${i + 1}</div>
+            <div class="pi-info">
+                <div class="pi-title">${m.title}</div>
+                <div class="pi-desc">${typeIcon[m.type]} ${m.type} · ~${m.duration_minutes} min</div>
+            </div>
+        </li>
+    `).join('');
+
+            document.getElementById('ai-preview-overlay').classList.add('open');
+            document.getElementById('ai-preview-modal').classList.add('open');
+            document.getElementById('confirm-ai-btn').onclick = importAiModules;
+        }
+
+        function closeAiPreview() {
+            document.getElementById('ai-preview-overlay').classList.remove('open');
+            document.getElementById('ai-preview-modal').classList.remove('open');
+        }
+
+        async function importAiModules() {
+            if (!courseId) {
+                alert('Error: Course ID not found. Cannot import modules.');
+                return;
+            }
+            if (!aiGeneratedModules || aiGeneratedModules.length === 0) {
+                alert('No modules to import.');
+                return;
+            }
+
+            const btn = document.getElementById('confirm-ai-btn');
+            const originalText = btn.textContent;
+            btn.disabled = true; btn.textContent = '⏳ Importing…';
+
+            try {
+                // Get current count for proper ordering
+                const { count, error: countErr } = await supabaseClient
+                    .from('course_modules')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('course_id', courseId);
+
+                if (countErr) {
+                    throw new Error('Failed to get current module count: ' + countErr.message);
+                }
+                const base = count || 0;
+
+                const rows = aiGeneratedModules.map((m, i) => ({
+                    course_id: courseId,
+                    title: m.title,
+                    type: m.type,
+                    duration_minutes: m.duration_minutes,
+                    content: m.content,
+                    order_index: base + i + 1,
+                }));
+
+                const { error: insErr } = await supabaseClient.from('course_modules').insert(rows);
+                if (insErr) {
+                    throw new Error('Failed to insert modules: ' + insErr.message);
+                }
+
+                btn.textContent = '✅ Success!';
+                setTimeout(() => {
+                    closeAiPreview();
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    loadModules();
+                }, 800);
+
+            } catch (err) {
+                console.error('Import Error:', err);
+                alert('Import failed: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // ── Load modules from Supabase ─────────────────────────
+        async function loadModules() {
+            const { data, error } = await supabaseClient
+                .from('course_modules')
+                .select('*')
+                .eq('course_id', courseId)
+                .order('order_index', { ascending: true });
+
+            if (error) { console.error(error); return; }
+            modules = data || [];
+            renderModuleList();
+        }
+
+        // ── File input / drag handlers ─────────────────────────
+        document.getElementById('browse-btn').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('doc-upload-input').click();
+        };
+        document.getElementById('ai-upload-btn').onclick = () => {
+            document.getElementById('doc-upload-input').click();
+        };
+        document.getElementById('doc-upload-input').onchange = (e) => {
+            if (e.target.files[0]) handleFileUpload(e.target.files[0]);
+        };
+
+        ['dragover', 'dragleave', 'drop'].forEach(evt => {
+            document.getElementById('ai-drop-zone').addEventListener(evt, e => {
+                e.preventDefault();
+                if (evt === 'dragover') e.currentTarget.classList.add('dragover');
+                else e.currentTarget.classList.remove('dragover');
+                if (evt === 'drop' && e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]);
+            });
+        });
+
+        // ── Initialization ─────────────────────────────────────
+        async function fetchCourseInfo() {
+            if (!courseId) return;
+            const { data, error } = await supabaseClient.from('courses').select('*').eq('id', courseId).single();
+            if (data) {
+                document.title = `${data.title} — LearNova`;
+                document.getElementById('course-title-display').textContent = data.title;
+                document.getElementById('course-category-display').textContent = data.category;
+                updatePublishUI(data.is_published);
+            }
+        }
+
+        function updatePublishUI(isPublished) {
+            const badge = document.getElementById('course-status-badge');
+            const btn = document.getElementById('publish-btn');
+            if (isPublished) {
+                badge.textContent = 'Published';
+                badge.className = 'badge badge-green';
+                btn.textContent = '📦 Unpublish (Draft)';
+                btn.className = 'btn btn-ghost btn-sm';
+            } else {
+                badge.textContent = 'Draft';
+                badge.className = 'badge badge-amber';
+                btn.textContent = '🚀 Publish Course';
+                btn.className = 'btn btn-emerald btn-sm';
+            }
+        }
+
+        window.togglePublish = async function () {
+            if (!courseId) return;
+            const btn = document.getElementById('publish-btn');
+            const isCurrentlyPublished = document.getElementById('course-status-badge').textContent === 'Published';
+            const newStatus = !isCurrentlyPublished;
+
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            const { error } = await supabaseClient.from('courses').update({ is_published: newStatus }).eq('id', courseId);
+
+            btn.disabled = false;
+            if (error) {
+                alert('Failed to update status: ' + error.message);
+            } else {
+                updatePublishUI(newStatus);
+            }
+        };
+
+        window.openCourseSettings = function () {
+            // Placeholder: simplest way is to redirect back to dashboard and open edit modal,
+            // but we can just say "Use the Dashboard to edit main course details" or build a quick modal.
+            alert('To edit course title, price, or images, please use the "Edit" button on your main Dashboard (My Courses).');
+        };
+
+        // Run on load
+        (async () => {
+            if (!courseId) {
+                alert('No course ID found in URL. Returning to dashboard.');
+                window.location.href = 'teacher-courses.html';
+                return;
+            }
+            await fetchCourseInfo();
+            await loadModules();
+        })();
+    </script>
+</body>
+
+</html>

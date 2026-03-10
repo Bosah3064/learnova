@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile — LearNova</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h)
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page);
+            overflow-x: hidden
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06)
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3)
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: 700
+        }
+
+        .sidebar-user-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, 0.45)
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--sp-4) var(--sp-3)
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            padding: var(--sp-3) var(--sp-2) var(--sp-1)
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            padding: var(--sp-2) var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            transition: all .18s;
+            margin-bottom: 2px
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff
+        }
+
+        .sidebar-link.active {
+            background: rgba(37, 99, 235, 0.25);
+            color: var(--clr-electric)
+        }
+
+        .sidebar-link .icon {
+            width: 20px;
+            text-align: center
+        }
+
+        .sidebar-footer {
+            padding: var(--sp-4);
+            border-top: 1px solid rgba(255, 255, 255, 0.06)
+        }
+
+        /* ── Profile-specific ── */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--sp-8);
+            max-width: 1000px;
+            margin: 0 auto
+        }
+
+        @media(max-width:800px) {
+            .profile-grid {
+                grid-template-columns: 1fr
+            }
+
+            .dash-sidebar {
+                display: none
+            }
+        }
+
+        .profile-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--sp-4);
+            position: sticky;
+            top: calc(var(--nav-h) + var(--sp-8))
+        }
+
+        .avatar-upload-wrap {
+            position: relative;
+            cursor: pointer;
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0
+        }
+
+        .avatar-upload-wrap .avatar-xl {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563EB, #7C3AED);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            font-family: var(--font-heading);
+            background-size: cover;
+            background-position: center;
+            transition: filter .2s
+        }
+
+        .avatar-upload-wrap:hover .avatar-xl {
+            filter: brightness(.65)
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity .2s;
+            pointer-events: none;
+            gap: 4px
+        }
+
+        .avatar-upload-wrap:hover .avatar-overlay {
+            opacity: 1
+        }
+
+        .avatar-upload-spinner {
+            display: none;
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .6);
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem
+        }
+
+        .profile-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--txt-primary);
+            text-align: center
+        }
+
+        .profile-headline {
+            font-size: var(--text-sm);
+            color: var(--txt-muted);
+            text-align: center
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--sp-3);
+            width: 100%
+        }
+
+        .profile-stat {
+            background: var(--bg-card-hover);
+            border-radius: var(--radius-md);
+            padding: var(--sp-3);
+            text-align: center
+        }
+
+        .profile-stat-val {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--txt-primary);
+            font-family: var(--font-heading)
+        }
+
+        .profile-stat-lbl {
+            font-size: 10px;
+            color: var(--txt-muted);
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .profile-form-area {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-5)
+        }
+
+        .form-section {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-6)
+        }
+
+        .form-section h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--txt-primary);
+            margin-bottom: var(--sp-5);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2)
+        }
+
+        .form-group {
+            margin-bottom: var(--sp-4)
+        }
+
+        .form-group label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--txt-secondary);
+            margin-bottom: var(--sp-2)
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--bg-card-hover);
+            border: 1.5px solid var(--bdr-subtle);
+            border-radius: var(--radius-md);
+            color: var(--txt-primary);
+            font-size: var(--text-sm);
+            font-family: var(--font-body);
+            resize: vertical;
+            transition: border-color .2s;
+            box-sizing: border-box
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--clr-electric)
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--sp-4)
+        }
+
+        @media(max-width:600px) {
+            .form-row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .input-icon-wrap {
+            position: relative
+        }
+
+        .input-icon-wrap .icon-prefix {
+            position: absolute;
+            left: var(--sp-3);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: var(--text-sm);
+            pointer-events: none
+        }
+
+        .input-icon-wrap input {
+            padding-left: var(--sp-8)
+        }
+
+        .form-footer {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4);
+            margin-top: var(--sp-2)
+        }
+
+        .toast {
+            position: fixed;
+            bottom: var(--sp-6);
+            right: var(--sp-6);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            padding: var(--sp-3) var(--sp-5);
+            font-size: var(--text-sm);
+            color: var(--txt-primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all .3s;
+            z-index: 9999;
+            pointer-events: none
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1
+        }
+
+        .toast.success {
+            border-color: var(--clr-emerald);
+            color: var(--clr-emerald)
+        }
+
+        .toast.error {
+            border-color: #EF4444;
+            color: #EF4444
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo"><span>Learn</span><span class="logo-accent">Nova</span></a>
+        <div class="nav-links">
+            <a href="index.html#paths">Paths</a>
+            <a href="index.html#courses">Courses</a>
+            <a href="pricing.html">Pricing</a>
+        </div>
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#7C3AED);cursor:pointer"
+                data-user-initials>JD</div>
+        </div>
+    </nav>
+
+    <div class="dash-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);cursor:pointer;background-size:cover;background-position:center"
+                        data-user-initials>JD</div>
+                    <div class="sidebar-user-info">
+                        <strong data-user-name>Learner</strong>
+                        <span id="sidebar-level-label">Level 1 · Student</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link active"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="dash-main">
+            <div style="margin-bottom:var(--sp-6)">
+                <h1 style="font-size:1.5rem;font-weight:800;color:var(--txt-primary)">👤 My Profile</h1>
+                <p style="color:var(--txt-muted);font-size:var(--text-sm);margin-top:var(--sp-1)">Manage your personal
+                    information and avatar.</p>
+            </div>
+
+            <div class="profile-grid">
+
+                <!-- LEFT: avatar + stats card -->
+                <div>
+                    <div class="profile-card">
+                        <div class="avatar-upload-wrap" onclick="document.getElementById('avatar-input').click()"
+                            title="Click to change photo">
+                            <div class="avatar-xl" id="avatar-preview" data-user-initials>JD</div>
+                            <div class="avatar-overlay">📷<span>Change Photo</span></div>
+                            <div class="avatar-upload-spinner" id="avatar-spinner">⏳</div>
+                        </div>
+                        <input type="file" id="avatar-input" accept="image/*" hidden />
+
+                        <div class="profile-name" data-user-name>Loading…</div>
+                        <div class="profile-headline" id="display-headline">Student at LearNova</div>
+
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <div class="profile-stat-val" id="ps-xp">—</div>
+                                <div class="profile-stat-lbl">XP</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-val" id="ps-level">—</div>
+                                <div class="profile-stat-lbl">Level</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-val" id="ps-courses">—</div>
+                                <div class="profile-stat-lbl">Courses</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-val" id="ps-certs">—</div>
+                                <div class="profile-stat-lbl">Certs</div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="width:100%;padding-top:var(--sp-3);border-top:1px solid var(--bdr-subtle);text-align:center">
+                            <div style="font-size:var(--text-xs);color:var(--txt-muted)" id="ps-member-since">Member
+                                since —</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: edit form -->
+                <div class="profile-form-area">
+
+                    <!-- Personal Info -->
+                    <form id="profile-form" class="form-section">
+                        <h3>✏️ Personal Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="f-name">Full Name</label>
+                                <input type="text" id="f-name" placeholder="Jane Doe" required />
+                            </div>
+                            <div class="form-group">
+                                <label for="f-phone">Phone</label>
+                                <input type="tel" id="f-phone" placeholder="+1 234 567 8900" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="f-headline">Headline</label>
+                            <input type="text" id="f-headline"
+                                placeholder="e.g. Full-Stack Developer · Passionate Learner" maxlength="100" />
+                        </div>
+                        <div class="form-group">
+                            <label for="f-bio">Bio</label>
+                            <textarea id="f-bio" rows="4"
+                                placeholder="Tell us a bit about yourself, your goals, and what you're learning…"
+                                maxlength="500"></textarea>
+                        </div>
+                    </form>
+
+                    <!-- Social Links -->
+                    <div class="form-section">
+                        <h3>🔗 Social Links</h3>
+                        <div class="form-group">
+                            <label for="f-website">Website</label>
+                            <div class="input-icon-wrap">
+                                <span class="icon-prefix">🌐</span>
+                                <input type="url" id="f-website" placeholder="https://yoursite.com" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="f-github">GitHub</label>
+                                <div class="input-icon-wrap">
+                                    <span class="icon-prefix">⚡</span>
+                                    <input type="text" id="f-github" placeholder="username" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="f-linkedin">LinkedIn</label>
+                                <div class="input-icon-wrap">
+                                    <span class="icon-prefix">👔</span>
+                                    <input type="text" id="f-linkedin" placeholder="linkedin.com/in/username" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="f-twitter">Twitter / X</label>
+                            <div class="input-icon-wrap">
+                                <span class="icon-prefix">🐦</span>
+                                <input type="text" id="f-twitter" placeholder="@username" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save bar -->
+                    <div style="display:flex;align-items:center;gap:var(--sp-4)">
+                        <button type="submit" form="profile-form" class="btn btn-primary" id="save-btn"
+                            style="min-width:150px">
+                            💾 Save Changes
+                        </button>
+                        <span id="save-status" style="font-size:var(--text-sm);color:var(--txt-muted)"></span>
+                    </div>
+
+                </div><!-- /form-area -->
+            </div><!-- /profile-grid -->
+        </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+
+</html>

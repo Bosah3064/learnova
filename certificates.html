@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certificates — LearNova</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h)
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page)
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, .06)
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3)
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: 700
+        }
+
+        .sidebar-user-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, .45)
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--sp-4) var(--sp-3)
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            padding: var(--sp-3) var(--sp-2) var(--sp-1)
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            padding: var(--sp-2) var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, .6);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            transition: all .18s;
+            margin-bottom: 2px
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, .07);
+            color: #fff
+        }
+
+        .sidebar-link.active {
+            background: rgba(37, 99, 235, .25);
+            color: var(--clr-electric)
+        }
+
+        .sidebar-link .icon {
+            width: 20px;
+            text-align: center
+        }
+
+        @media(max-width:1024px) {
+            .dash-sidebar {
+                display: none
+            }
+        }
+
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: var(--sp-6)
+        }
+
+        .cert-card {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            border: 1px solid rgba(99, 102, 241, .3);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-7);
+            position: relative;
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s
+        }
+
+        .cert-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, .3)
+        }
+
+        .cert-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, .15)
+        }
+
+        .cert-badge {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #F59E0B, #EF4444);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: var(--sp-4);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, .3)
+        }
+
+        .cert-course {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: var(--sp-2);
+            line-height: 1.35
+        }
+
+        .cert-meta {
+            font-size: var(--text-sm);
+            color: rgba(255, 255, 255, .6);
+            margin-bottom: var(--sp-5)
+        }
+
+        .cert-actions {
+            display: flex;
+            gap: var(--sp-3)
+        }
+
+        .cert-id {
+            position: absolute;
+            bottom: var(--sp-4);
+            right: var(--sp-4);
+            font-size: 10px;
+            color: rgba(255, 255, 255, .3);
+            letter-spacing: .05em
+        }
+
+        .cert-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, .1);
+            margin: var(--sp-4) 0
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo"><span>Learn</span><span class="logo-accent">Nova</span></a>
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#7C3AED)" data-user-initials>
+                JD</div>
+        </div>
+    </nav>
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);background-size:cover;background-position:center"
+                        data-user-initials>JD</div>
+                    <div class="sidebar-user-info"><strong data-user-name>Learner</strong><span
+                            id="sidebar-level-label">Level 1 · Student</span></div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link active"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+        <main class="dash-main">
+            <div style="margin-bottom:var(--sp-6)">
+                <h1 style="font-size:1.5rem;font-weight:800;color:var(--txt-primary)">🏆 My Certificates</h1>
+                <p style="color:var(--txt-muted);font-size:var(--text-sm);margin-top:var(--sp-1)" id="cert-subtitle">
+                    Loading…</p>
+            </div>
+            <div id="cert-grid" class="cert-grid"></div>
+        </main>
+    </div>
+    <script src="js/theme.js"></script>
+    <script>
+        (async function () {
+            await new Promise(r => { if (window.LN_USER) return r(); const t = setInterval(() => { if (window.LN_USER) { clearInterval(t); r(); } }, 50); setTimeout(() => { clearInterval(t); r(); }, 5000); });
+            const userId = window.LN_USER?.id;
+            if (!userId) return;
+            const { data: prof } = await supabaseClient.from('profiles').select('xp,role,avatar_url,full_name').eq('id', userId).single();
+            if (prof) {
+                const lv = Math.floor((prof.xp || 0) / 500) + 1;
+                const sl = document.getElementById('sidebar-level-label');
+                if (sl) sl.textContent = `${prof.role === 'teacher' ? 'Instructor' : 'Student'} · Level ${lv}`;
+                if (prof.avatar_url) { const a = document.getElementById('sb-avatar'); if (a) { a.style.backgroundImage = `url(${prof.avatar_url})`; a.textContent = ''; } }
+            }
+            const { data: enrollments } = await supabaseClient.from('enrollments').select('id, progress_pct, last_accessed, courses(id, title, instructor_name, thumbnail_emoji, duration_hours)').eq('student_id', userId).gte('progress_pct', 100);
+            const completed = enrollments || [];
+            document.getElementById('cert-subtitle').textContent = `${completed.length} certificate${completed.length !== 1 ? 's' : ''} earned`;
+            const grid = document.getElementById('cert-grid');
+            if (!completed.length) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:var(--sp-16)">
+      <div style="font-size:4rem;margin-bottom:var(--sp-4)">🎓</div>
+      <h3 style="color:var(--txt-primary);margin-bottom:var(--sp-2)">No certificates yet</h3>
+      <p style="color:var(--txt-muted);margin-bottom:var(--sp-5)">Complete a course to earn your first certificate!</p>
+      <a href="my-courses.html" class="btn btn-primary">Continue Learning →</a>
+    </div>`;
+                return;
+            }
+            const name = prof?.full_name || window.LN_NAME || 'Learner';
+            grid.innerHTML = completed.map(e => {
+                const c = e.courses;
+                const d = new Date(e.last_accessed);
+                const dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const certId = `LN-${e.id.slice(0, 8).toUpperCase()}`;
+                return `<div class="cert-card">
+      <div class="cert-badge">🏆</div>
+      <div style="font-size:var(--text-xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:var(--sp-2)">Certificate of Completion</div>
+      <div class="cert-course">${c.title}</div>
+      <div class="cert-meta">Awarded to <strong style="color:#fff">${name}</strong><br>Instructor: ${c.instructor_name} · ${c.duration_hours}h course</div>
+      <div class="cert-divider"></div>
+      <div style="font-size:var(--text-xs);color:rgba(255,255,255,.5);margin-bottom:var(--sp-4)">📅 Completed ${dateStr}</div>
+      <div class="cert-actions">
+        <button onclick="downloadCert('${c.title}','${name}','${dateStr}','${certId}')" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center">⬇ Download</button>
+        <button onclick="shareCert('${c.title}')" class="btn" style="flex:1;justify-content:center;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)">🔗 Share</button>
+      </div>
+      <div class="cert-id">ID: ${certId}</div>
+    </div>`;
+            }).join('');
+        })();
+
+        function downloadCert(course, name, date, id) {
+            alert(`📜 Certificate\n\nThis is certifying that:\n${name}\nhas successfully completed:\n"${course}"\n\nDate: ${date}\nID: ${id}\n\n(PDF export coming soon!)`);
+        }
+        function shareCert(course) {
+            const text = `I just completed "${course}" on LearNova! 🎓🚀 #LearNova #Learning`;
+            if (navigator.share) navigator.share({ title: 'LearNova Certificate', text });
+            else { navigator.clipboard.writeText(text); alert('Copied to clipboard! Share it anywhere.'); }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teacher Dashboard — LearNova</title>
+    <meta name="description"
+        content="Manage your LearNova courses, track student progress, schedule live sessions, and grow your teaching income." />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h);
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto;
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page);
+            overflow-x: hidden;
+        }
+
+        @media(max-width:1024px) {
+            .dash-sidebar {
+                display: none;
+            }
+
+            .dash-main {
+                padding: var(--sp-5);
+            }
+        }
+
+        @media(max-width:640px) {
+            .dash-main {
+                padding: var(--sp-4);
+            }
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: 700;
+        }
+
+        .sidebar-user-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--sp-4) var(--sp-3);
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.25);
+            padding: var(--sp-4) var(--sp-3) var(--sp-2);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            margin-bottom: 2px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--grad-emerald);
+            color: #fff;
+        }
+
+        .sidebar-link .icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            width: 22px;
+            text-align: center;
+        }
+
+        .dash-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--sp-8);
+            gap: var(--sp-4);
+            flex-wrap: wrap;
+        }
+
+        .dash-welcome h1 {
+            font-size: var(--text-2xl);
+            margin-bottom: 4px;
+        }
+
+        .dash-welcome p {
+            font-size: var(--text-sm);
+            color: var(--txt-muted);
+            margin: 0;
+        }
+
+        .dash-topbar-actions {
+            display: flex;
+            gap: var(--sp-3);
+            align-items: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--sp-5);
+            margin-bottom: var(--sp-8);
+        }
+
+        @media(max-width:900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width:480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: var(--sp-6);
+        }
+
+        @media(max-width:1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 300px;
+            }
+        }
+
+        @media(max-width:900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dash-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--sp-5);
+        }
+
+        .dash-section-header h3 {
+            font-size: var(--text-lg);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .dash-section-header a {
+            font-size: var(--text-sm);
+            color: var(--txt-accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Course management table */
+        .course-row {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4);
+            padding: var(--sp-4);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--sp-3);
+            transition: all var(--transition-base);
+        }
+
+        .course-row:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--bdr-accent);
+        }
+
+        .course-row-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .course-row-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .course-row-title {
+            font-weight: 700;
+            font-size: var(--text-sm);
+            color: var(--txt-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .course-row-meta {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 2px;
+        }
+
+        .course-row-stat {
+            text-align: center;
+            min-width: 64px;
+            flex-shrink: 0;
+        }
+
+        .course-row-stat strong {
+            display: block;
+            font-size: var(--text-base);
+            font-weight: 800;
+            color: var(--txt-primary);
+        }
+
+        .course-row-stat span {
+            font-size: 10px;
+            color: var(--txt-muted);
+        }
+
+        .course-row-actions {
+            display: flex;
+            gap: var(--sp-2);
+            margin-left: var(--sp-2);
+            flex-shrink: 0;
+        }
+
+        /* Revenue chart placeholder */
+        .revenue-chart {
+            background: var(--bg-card-hover);
+            border-radius: var(--radius-lg);
+            height: 180px;
+            display: flex;
+            align-items: flex-end;
+            gap: var(--sp-2);
+            padding: var(--sp-4);
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            flex: 1;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            transition: all .3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .chart-bar:hover {
+            filter: brightness(1.15);
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            bottom: -var(--sp-5);
+            width: 100%;
+            text-align: center;
+            font-size: 9px;
+            color: var(--txt-muted);
+        }
+
+        /* Student list */
+        .student-row {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3) 0;
+            border-bottom: 1px solid var(--bdr-subtle);
+        }
+
+        .student-row:last-child {
+            border-bottom: none;
+        }
+
+        .student-name {
+            flex: 1;
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--txt-primary);
+        }
+
+        .student-course {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+        }
+
+        .student-progress {
+            font-size: var(--text-xs);
+            color: var(--clr-electric);
+            font-weight: 700;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        /* Sessions */
+        .session-card {
+            padding: var(--sp-4);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--sp-3);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4);
+        }
+
+        .session-card:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .session-time-block {
+            background: var(--grad-primary);
+            color: #fff;
+            border-radius: var(--radius-md);
+            padding: var(--sp-3) var(--sp-4);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .session-time-block strong {
+            display: block;
+            font-size: var(--text-lg);
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .session-time-block span {
+            font-size: 10px;
+            opacity: .8;
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-title {
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--txt-primary);
+        }
+
+        .session-meta {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <script>(function () { const t = localStorage.getItem('ln-theme'); if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'dark'); })();</script>
+
+    <!-- NAV -->
+    <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo no-select">
+                <div class="logo-icon">🎓</div>Learn<span>Nova</span>
+            </a>
+            <ul class="nav-links" role="list">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#courses">Browse Courses</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="nav-search-btn" aria-label="Search" title="Search (Ctrl+K)"
+                    style="font-size:17px">🔍</button>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme"><span
+                        id="theme-icon">🌙</span></button>
+                <div id="notif-bell" style="position:relative;display:flex;align-items:center">
+                    <button class="theme-toggle" aria-label="Notifications" style="font-size:18px">🔔</button>
+                </div>
+                <a href="student.html" class="btn btn-ghost btn-sm">Student View</a>
+                <div class="avatar" style="background:linear-gradient(135deg,#10B981,#059669);cursor:pointer"
+                    title="Profile" data-user-initials>JL</div>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+        <div class="mobile-menu" id="mobile-menu">
+            <a href="index.html">Home</a>
+            <a href="index.html#courses">Browse Courses</a>
+            <a href="pricing.html">Pricing</a>
+            <a href="student.html" class="btn btn-primary" style="text-align:center">Student View</a>
+        </div>
+    </nav>
+
+    <div class="dash-layout">
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#10B981,#059669)"
+                        data-user-initials>JL</div>
+                    <div class="sidebar-user-info">
+                        <strong data-user-name>James Liu</strong>
+                        <span>⭐ 4.8 · Full-Stack Architect</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Teach</div>
+                <a href="teacher.html" class="sidebar-link active"><span class="icon">📊</span>Dashboard</a>
+                <a href="teacher-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="#" data-open-create-course class="sidebar-link"><span class="icon">➕</span>Create Course</a>
+                <a href="teacher-students.html" class="sidebar-link"><span class="icon">👥</span>Students</a>
+                <a href="teacher-sessions.html" class="sidebar-link"><span class="icon">📅</span>Sessions</a>
+                <div class="sidebar-section-label">Business</div>
+                <a href="teacher-revenue.html" class="sidebar-link"><span class="icon">💰</span>Revenue</a>
+                <a href="#" class="sidebar-link"><span class="icon">📈</span>Analytics</a>
+                <a href="#" class="sidebar-link"><span class="icon">💬</span>Reviews</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" class="sidebar-link"><span class="icon">💳</span>Payouts</a>
+                <a href="#" onclick="signOut(); return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <main class="dash-main">
+            <!-- Topbar -->
+            <div class="dash-topbar">
+                <div class="dash-welcome">
+                    <h1>Teacher Dashboard 🎙</h1>
+                    <p>3 live sessions this week · Your courses are trending! 🔥</p>
+                </div>
+                <div class="dash-topbar-actions">
+                    <a href="#" class="btn btn-secondary btn-sm">📋 View Analytics</a>
+                    <a href="#" class="btn btn-emerald btn-sm">➕ New Course</a>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">👥</div>
+                    <div>
+                        <div class="stat-value" id="stat-students">—</div>
+                        <div class="stat-label">Total Students</div>
+                        <div class="stat-change up">Across all courses</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amber">💰</div>
+                    <div>
+                        <div class="stat-value">$0</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                        <div class="stat-change up">Coming soon</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">📚</div>
+                    <div>
+                        <div class="stat-value" id="stat-courses">—</div>
+                        <div class="stat-label">Active Courses</div>
+                        <div class="stat-change up">Published courses</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">⭐</div>
+                    <div>
+                        <div class="stat-value" id="stat-rating">—</div>
+                        <div class="stat-label">Avg. Rating</div>
+                        <div class="stat-change up">From student reviews</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div>
+                    <!-- Revenue Chart -->
+                    <div class="card" style="margin-bottom:var(--sp-6)">
+                        <div class="dash-section-header">
+                            <h3>💰 Revenue Overview</h3>
+                            <select
+                                style="font-size:var(--text-sm);color:var(--txt-secondary);border:1px solid var(--bdr-subtle);border-radius:var(--radius-sm);padding:4px 8px;background:var(--bg-card);cursor:pointer;outline:none">
+                                <option>Last 7 months</option>
+                                <option>Last year</option>
+                            </select>
+                        </div>
+                        <div
+                            style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--txt-muted);margin-bottom:var(--sp-3)">
+                            <span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span>
+                        </div>
+                        <div class="revenue-chart">
+                            <div class="chart-bar" style="height:52%;background:var(--grad-emerald);opacity:0.7"></div>
+                            <div class="chart-bar" style="height:68%;background:var(--grad-emerald);opacity:0.8"></div>
+                            <div class="chart-bar" style="height:55%;background:var(--grad-emerald);opacity:0.7"></div>
+                            <div class="chart-bar" style="height:80%;background:var(--grad-emerald);opacity:0.85"></div>
+                            <div class="chart-bar" style="height:72%;background:var(--grad-emerald);opacity:0.8"></div>
+                            <div class="chart-bar" style="height:88%;background:var(--grad-emerald)"></div>
+                            <div class="chart-bar"
+                                style="height:95%;background:var(--grad-emerald);box-shadow:0 0 16px rgba(16,185,129,0.5)">
+                            </div>
+                        </div>
+                        <div
+                            style="display:flex;justify-content:space-between;margin-top:var(--sp-4);font-size:var(--text-sm)">
+                            <span style="color:var(--txt-muted)">This month</span>
+                            <span style="font-weight:800;color:var(--clr-emerald)">$14,320 <span
+                                    style="font-weight:400;color:var(--clr-emerald);font-size:var(--text-xs)">+23%</span></span>
+                        </div>
+                    </div>
+
+                    <!-- My Courses -->
+                    <div class="card" style="margin-bottom:var(--sp-6)">
+                        <div class="dash-section-header">
+                            <h3>📚 My Courses</h3>
+                            <a href="#">Manage all →</a>
+                        </div>
+                        <!-- Filled by teacher-dashboard.js -->
+                        <div id="teacher-course-list">
+                            <div
+                                style="text-align:center;padding:var(--sp-6);color:var(--txt-muted);font-size:var(--text-sm)">
+                                <span
+                                    style="display:inline-block;animation:spin 1s linear infinite;font-size:1.5rem">⏳</span>
+                                <p style="margin-top:var(--sp-2)">Loading courses…</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Sessions -->
+                    <div class="card">
+                        <div class="dash-section-header">
+                            <h3>📅 Upcoming Mentorship Sessions</h3>
+                            <a href="#">Open calendar →</a>
+                        </div>
+                        <div class="session-card">
+                            <div class="session-time-block"><strong>3:00</strong><span>PM Today</span></div>
+                            <div class="session-info">
+                                <div class="session-title">1-on-1 — React Architecture Review</div>
+                                <div class="session-meta">👤 Maria S. · 60 min · Zoom</div>
+                            </div>
+                            <a href="#" class="btn btn-primary btn-sm">Join →</a>
+                        </div>
+                        <div class="session-card">
+                            <div class="session-time-block" style="background:var(--grad-purple)">
+                                <strong>10:00</strong><span>AM Tomorrow</span>
+                            </div>
+                            <div class="session-info">
+                                <div class="session-title">Group Session — Node.js Performance</div>
+                                <div class="session-meta">👥 4 students · 90 min · Zoom</div>
+                            </div>
+                            <a href="#" class="btn btn-secondary btn-sm">Prep →</a>
+                        </div>
+                        <div class="session-card" style="opacity:0.65">
+                            <div class="session-time-block" style="background:var(--grad-emerald)">
+                                <strong>2:00</strong><span>PM Friday</span>
+                            </div>
+                            <div class="session-info">
+                                <div class="session-title">Career Coaching — Portfolio Review</div>
+                                <div class="session-meta">👤 Alex K. · 45 min · Zoom</div>
+                            </div>
+                            <a href="#" class="btn btn-ghost btn-sm">View →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column -->
+                <div style="display:flex;flex-direction:column;gap:var(--sp-5)">
+
+                    <!-- Active students -->
+                    <div class="card">
+                        <div class="dash-section-header" style="margin-bottom:var(--sp-4)">
+                            <h4>👥 Recent Students</h4>
+                            <a href="#"
+                                style="font-size:var(--text-sm);color:var(--txt-accent);text-decoration:none">All →</a>
+                        </div>
+                        <!-- Filled by teacher-dashboard.js -->
+                        <div id="recent-students-list">
+                            <div
+                                style="text-align:center;padding:var(--sp-4);color:var(--txt-muted);font-size:var(--text-sm)">
+                                <span style="display:inline-block;animation:spin 1s linear infinite">⏳</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Reviews -->
+                    <div class="card">
+                        <div class="dash-section-header" style="margin-bottom:var(--sp-4)">
+                            <h4>💬 Latest Reviews</h4>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+                            <div>
+                                <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)">
+                                    <div class="avatar avatar-sm"
+                                        style="background:linear-gradient(135deg,#2563EB,#7C3AED)">JD</div>
+                                    <div>
+                                        <div style="font-size:var(--text-sm);font-weight:700;color:var(--txt-primary)">
+                                            Jane Doe</div>
+                                        <div style="font-size:11px;color:var(--clr-amber)">★★★★★</div>
+                                    </div>
+                                </div>
+                                <p
+                                    style="font-size:var(--text-xs);color:var(--txt-secondary);margin:0;font-style:italic">
+                                    "Absolutely incredible course. James explains complex concepts so clearly. Changed
+                                    my career!"</p>
+                            </div>
+                            <div style="border-top:1px solid var(--bdr-subtle);padding-top:var(--sp-4)">
+                                <div style="display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)">
+                                    <div class="avatar avatar-sm"
+                                        style="background:linear-gradient(135deg,#F59E0B,#EF4444)">RM</div>
+                                    <div>
+                                        <div style="font-size:var(--text-sm);font-weight:700;color:var(--txt-primary)">
+                                            Ravi Menon</div>
+                                        <div style="font-size:11px;color:var(--clr-amber)">★★★★★</div>
+                                    </div>
+                                </div>
+                                <p
+                                    style="font-size:var(--text-xs);color:var(--txt-secondary);margin:0;font-style:italic">
+                                    "Best React course on any platform. The project-based approach is fantastic."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick actions -->
+                    <div class="card" style="background:linear-gradient(135deg,#065f46,#064e3b);border:none">
+                        <h4 style="color:#fff;margin-bottom:var(--sp-4)">⚡ Quick Actions</h4>
+                        <div style="display:flex;flex-direction:column;gap:var(--sp-3)">
+                            <button data-open-create-course class="btn"
+                                style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:flex-start;gap:var(--sp-3)">➕
+                                Create New Course</button>
+                            <a href="#" class="btn"
+                                style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:flex-start;gap:var(--sp-3)">📅
+                                Schedule Session</a>
+                            <a href="#" class="btn"
+                                style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:flex-start;gap:var(--sp-3)">💬
+                                Message Students</a>
+                            <a href="#" class="btn"
+                                style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:flex-start;gap:var(--sp-3)">💸
+                                Request Payout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/teacher-dashboard.js"></script>
+</body>
+
+</html>

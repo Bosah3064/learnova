@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find a Mentor — LearNova</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h)
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            min-height: calc(100vh - var(--nav-h));
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page);
+            overflow-x: hidden
+        }
+
+        @media(max-width:1024px) {
+            .dash-sidebar {
+                display: none
+            }
+        }
+
+        .mentors-hero {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-10) var(--sp-8);
+            margin-bottom: var(--sp-8);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.2)
+        }
+
+        .mentors-hero::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.1)
+        }
+
+        .mentors-hero h1 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: var(--sp-2)
+        }
+
+        .mentors-hero p {
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 500px;
+            font-size: var(--text-base)
+        }
+
+        .filters-container {
+            display: flex;
+            gap: var(--sp-4);
+            margin-bottom: var(--sp-8);
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .search-mentors-wrap {
+            flex: 1;
+            position: relative;
+            min-width: 300px
+        }
+
+        .search-mentors-wrap input {
+            width: 100%;
+            padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-10);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            color: var(--txt-primary);
+            font-size: var(--text-sm)
+        }
+
+        .search-mentors-wrap .icon {
+            position: absolute;
+            left: var(--sp-3);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            opacity: 0.5
+        }
+
+        .mentors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--sp-6)
+        }
+
+        .mentor-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-6);
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-4)
+        }
+
+        .mentor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(99, 102, 241, 0.3)
+        }
+
+        .mentor-header {
+            display: flex;
+            gap: var(--sp-4);
+            align-items: flex-start
+        }
+
+        .mentor-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-lg);
+            background-size: cover;
+            background-position: center;
+            border: 2px solid var(--bdr-subtle)
+        }
+
+        .mentor-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--txt-primary);
+            margin-bottom: 2px
+        }
+
+        .mentor-info .headline {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            line-height: 1.4
+        }
+
+        .mentor-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--sp-2)
+        }
+
+        .mentor-tag {
+            padding: 4px 10px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--clr-electric);
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em
+        }
+
+        .mentor-bio {
+            font-size: var(--text-sm);
+            color: var(--txt-secondary);
+            line-height: 1.6;
+            flex-grow: 1
+        }
+
+        .mentor-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--bdr-subtle);
+            padding-top: var(--sp-4)
+        }
+
+        .mentor-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px
+        }
+
+        .mentor-rating {
+            color: var(--clr-amber);
+            font-weight: 700;
+            font-size: var(--text-sm);
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .mentor-price {
+            font-size: var(--text-xs);
+            color: var(--txt-muted)
+        }
+
+        .mentor-price strong {
+            color: var(--txt-primary);
+            font-size: var(--text-sm)
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px)
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-2xl);
+            width: 100%;
+            max-width: 500px;
+            padding: var(--sp-8);
+            position: relative;
+            animation: modalIn 0.3s ease-out
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: var(--sp-4);
+            right: var(--sp-4);
+            font-size: 1.5rem;
+            color: var(--txt-muted);
+            cursor: pointer;
+            background: none;
+            border: none
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo"><span>Learn</span><span class="logo-accent">Nova</span></a>
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#7C3AED)" data-user-initials>
+                JD</div>
+        </div>
+    </nav>
+
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);background-size:cover;background-position:center"
+                        data-user-initials>JD</div>
+                    <div class="sidebar-user-info">
+                        <strong data-user-name>Learner</strong>
+                        <span id="sidebar-level-label">Level 1 · Student</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link active"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <main class="dash-main">
+            <div class="mentors-hero">
+                <h1>Expert Mentorship</h1>
+                <p>Connect with industry leaders and accelerate your career with personalized guidance and 1-on-1
+                    sessions.</p>
+            </div>
+
+            <div class="filters-container">
+                <div class="search-mentors-wrap">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="mentor-search" placeholder="Search by name, skill, or role..."
+                        oninput="filterMentors()">
+                </div>
+                <select class="btn btn-secondary btn-sm" id="field-filter" onchange="filterMentors()"
+                    style="padding: 8px 16px; border-radius: var(--radius-lg)">
+                    <option value="all">All Fields</option>
+                    <option value="English Language">English Language</option>
+                    <option value="Frontend Development">Frontend</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Cybersecurity">Cybersecurity</option>
+                    <option value="UI/UX Design">UI/UX Design</option>
+                </select>
+            </div>
+
+            <div class="mentors-grid" id="mentors-grid">
+                <!-- Mentors loaded by JS -->
+                <div style="grid-column: 1/-1; text-align: center; padding: 100px 0; color: var(--txt-muted);">
+                    ⏳ Loading expert mentors...
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal" id="booking-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">×</button>
+            <h2
+                style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; margin-bottom: var(--sp-4);">
+                Book a Session</h2>
+            <div id="booking-details">
+                <!-- Populated by JS -->
+            </div>
+            <form id="booking-form" onsubmit="event.preventDefault(); submitBooking();"
+                style="margin-top: var(--sp-6);">
+                <div class="form-group" style="margin-bottom: var(--sp-4);">
+                    <label
+                        style="display: block; font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--sp-2);">Select
+                        Date</label>
+                    <input type="date" required
+                        style="width: 100%; padding: 12px; background: var(--bg-page); border: 1px solid var(--bdr-subtle); border-radius: var(--radius-lg); color: var(--txt-primary);">
+                </div>
+                <div class="form-group" style="margin-bottom: var(--sp-6);">
+                    <label
+                        style="display: block; font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--sp-2);">Select
+                        Time Slot</label>
+                    <select required
+                        style="width: 100%; padding: 12px; background: var(--bg-page); border: 1px solid var(--bdr-subtle); border-radius: var(--radius-lg); color: var(--txt-primary);">
+                        <option value="10:00">10:00 AM - 11:00 AM</option>
+                        <option value="14:00">02:00 PM - 03:00 PM</option>
+                        <option value="16:00">04:00 PM - 05:00 PM</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script>
+        let allMentors = [];
+
+        async function initMentors() {
+            await new Promise(r => { if (window.LN_USER) return r(); const t = setInterval(() => { if (window.LN_USER) { clearInterval(t); r(); } }, 50); });
+            const { data, error } = await supabaseClient.from('mentors').select('*');
+            if (error) {
+                console.error('Error loading mentors:', error);
+                return;
+            }
+            allMentors = data || [];
+            renderMentors(allMentors);
+        }
+
+        function renderMentors(list) {
+            const grid = document.getElementById('mentors-grid');
+            if (list.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px 0; color: var(--txt-muted);">No mentors found matching your criteria.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(m => `
+            <div class="mentor-card">
+                <div class="mentor-header">
+                    <div class="mentor-avatar" style="background-image: url('${m.avatar_url || 'https://via.placeholder.com/150'}')"></div>
+                    <div class="mentor-info">
+                        <h3>${m.full_name}</h3>
+                        <div class="headline">${m.headline}</div>
+                        <div class="mentor-rating">⭐ ${m.rating} <span style="font-weight: 400; color: var(--txt-muted); font-size: 11px;">(${m.students_count} students)</span></div>
+                    </div>
+                </div>
+                <div class="mentor-tags">
+                    <span class="mentor-tag">${m.field}</span>
+                </div>
+                <p class="mentor-bio">${m.bio}</p>
+                <div class="mentor-footer">
+                    <div class="mentor-meta">
+                        <div class="mentor-price">Starting from:</div>
+                        <div class="mentor-price"><strong>$${m.price_per_hour}</strong> / hour</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="openBooking('${m.id}')">Book Session</button>
+                </div>
+            </div>
+        `).join('');
+        }
+
+        function filterMentors() {
+            const query = document.getElementById('mentor-search').value.toLowerCase();
+            const field = document.getElementById('field-filter').value;
+            const filtered = allMentors.filter(m => {
+                const matchesQuery = m.full_name.toLowerCase().includes(query) || m.field.toLowerCase().includes(query) || m.headline.toLowerCase().includes(query);
+                const matchesField = field === 'all' || m.field === field;
+                return matchesQuery && matchesField;
+            });
+            renderMentors(filtered);
+        }
+
+        function openBooking(id) {
+            const mentor = allMentors.find(m => m.id === id);
+            if (!mentor) return;
+            document.getElementById('booking-details').innerHTML = `
+            <div style="display: flex; gap: var(--sp-3); align-items: center; margin-bottom: var(--sp-4);">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background-image: url('${mentor.avatar_url}'); background-size: cover;"></div>
+                <div>
+                    <div style="font-weight: 700;">${mentor.full_name}</div>
+                    <div style="font-size: var(--text-xs); color: var(--txt-muted);">${mentor.field} Mentorship</div>
+                </div>
+            </div>
+            <div style="padding: 12px; border-radius: var(--radius-lg); background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); font-size: var(--text-sm); font-weight: 600; color: var(--clr-electric); text-align: center;">
+                Total Cost: $${mentor.price_per_hour}
+            </div>
+        `;
+            document.getElementById('booking-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('booking-modal').style.display = 'none';
+        }
+
+        function submitBooking() {
+            alert('Booking confirmed! You will receive a confirmation email with the session link shortly.');
+            closeModal();
+        }
+
+        document.addEventListener('DOMContentLoaded', initMentors);
+    </script>
+</body>
+
+</html>

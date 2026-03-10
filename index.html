@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LearNova — Master Skills. Learn Live. Grow Without Limits.</title>
+  <meta name="description"
+    content="The world's most innovative learning marketplace. Recorded courses, live tutoring, AI mentorship, and structured career paths — all in one platform." />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase.js"></script>
+</head>
+
+<body>
+
+  <!-- ═══════════════ NAV ═══════════════ -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo no-select">
+        <div class="logo-icon">🎓</div>
+        Learn<span>Nova</span>
+      </a>
+      <ul class="nav-links" role="list">
+        <li><a href="#paths">Paths</a></li>
+        <li><a href="#courses">Courses</a></li>
+        <li><a href="#mentors">Mentors</a></li>
+        <li><a href="#community">Community</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="nav-search-btn" aria-label="Search" title="Search (Ctrl+K)"
+          style="font-size:17px">🔍</button>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <a href="login.html" class="btn btn-ghost btn-sm" id="nav-signin">Sign In</a>
+        <a href="pricing.html" class="btn btn-primary btn-sm" id="nav-getstarted">Get Started</a>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="#paths">Learning Paths</a>
+      <a href="#courses">Courses</a>
+      <a href="#mentors">Live Mentors</a>
+      <a href="#community">Community</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="login.html" class="btn btn-primary" style="text-align:center">Get Started Free</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-orbs">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+    <div class="hero-content">
+      <div class="container hero-inner">
+        <!-- Left -->
+        <div class="hero-text">
+          <div class="hero-eyebrow no-select">
+            <span class="dot"></span> #1 Global Learning Marketplace
+          </div>
+          <h1>Master Skills.<br><span class="highlight">Learn Live.</span><br>Grow Without Limits.</h1>
+          <p class="hero-sub">The world's most powerful learning ecosystem combining expert courses, live mentorship, AI
+            assistance, and structured career paths — built for ambitious learners worldwide.</p>
+          <div class="hero-actions">
+            <a href="student.html" class="btn btn-primary btn-xl"
+              style="background:linear-gradient(135deg,#2563EB,#7C3AED)">
+              🚀 Explore Courses
+            </a>
+            <a href="teacher.html" class="btn btn-xl"
+              style="background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.25);backdrop-filter:blur(10px)">
+              🎙 Become a Teacher
+            </a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat-item">
+              <div class="hero-stat-value" data-counter data-target="2400000" data-suffix="+" data-prefix="">2.4M+</div>
+              <div class="hero-stat-label">Active Learners</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat-item">
+              <div class="hero-stat-value" data-counter data-target="18500" data-suffix="+">18,500+</div>
+              <div class="hero-stat-label">Expert Courses</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat-item">
+              <div class="hero-stat-value" data-counter data-target="98" data-suffix="%">98%</div>
+              <div class="hero-stat-label">Satisfaction Rate</div>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat-item">
+              <div class="hero-stat-value" data-counter data-target="150" data-suffix="+">150+</div>
+              <div class="hero-stat-label">Countries</div>
+            </div>
+          </div>
+        </div>
+        <!-- Right / Visual -->
+        <div class="hero-visual">
+          <div class="hero-card-stack">
+            <div class="floating-card card-a glass-dark">
+              <div class="floating-card-label">🔥 Streak</div>
+              <div class="floating-card-value" style="color:#F59E0B">21 Days</div>
+            </div>
+            <div class="hero-main-card">
+              <div class="hero-card-title">🎓 Today's Learning Path</div>
+              <div class="lesson-row">
+                <div class="lesson-num done">✓</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">JavaScript Fundamentals</div>
+                  <div class="lesson-dur">45 min · Completed</div>
+                </div>
+                <span class="lesson-check">✅</span>
+              </div>
+              <div class="lesson-row">
+                <div class="lesson-num" style="background:var(--grad-purple)">2</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">React Hooks Deep Dive</div>
+                  <div class="lesson-dur">60 min · In Progress</div>
+                </div>
+                <span style="color:var(--clr-electric);font-size:14px;font-weight:700">78%</span>
+              </div>
+              <div class="lesson-row" style="opacity:0.6">
+                <div class="lesson-num" style="background:rgba(255,255,255,0.15)">3</div>
+                <div class="lesson-info">
+                  <div class="lesson-name">Live Mentorship Session</div>
+                  <div class="lesson-dur">90 min · Tomorrow 3PM</div>
+                </div>
+                <span style="color:rgba(255,255,255,0.4);font-size:14px">🔒</span>
+              </div>
+              <div style="margin-top:16px">
+                <div
+                  style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:6px">
+                  <span>Daily Progress</span><span style="color:#10B981;font-weight:700">67%</span>
+                </div>
+                <div class="progress-wrap">
+                  <div class="progress-bar green" data-progress="67"></div>
+                </div>
+              </div>
+            </div>
+            <div class="floating-card card-b glass-dark">
+              <div class="floating-card-label">⚡ AI Insight</div>
+              <div class="floating-card-value" style="color:#A78BFA;font-size:14px">Next: React Patterns</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TRUSTED BY ═══════════════ -->
+  <section class="trusted-section">
+    <div class="trusted-label">Trusted by learners from world-class companies</div>
+    <div class="marquee-wrap">
+      <div class="marquee-track">
+        <div class="marquee-item"><span>🏢</span> Google</div>
+        <div class="marquee-item"><span>💼</span> Microsoft</div>
+        <div class="marquee-item"><span>📦</span> Amazon</div>
+        <div class="marquee-item"><span>🍎</span> Apple</div>
+        <div class="marquee-item"><span>🎬</span> Netflix</div>
+        <div class="marquee-item"><span>🚀</span> SpaceX</div>
+        <div class="marquee-item"><span>💡</span> Tesla</div>
+        <div class="marquee-item"><span>🔵</span> Meta</div>
+        <div class="marquee-item"><span>☁️</span> Salesforce</div>
+        <div class="marquee-item"><span>🐦</span> Airbnb</div>
+        <!-- duplicate for seamless loop -->
+        <div class="marquee-item"><span>🏢</span> Google</div>
+        <div class="marquee-item"><span>💼</span> Microsoft</div>
+        <div class="marquee-item"><span>📦</span> Amazon</div>
+        <div class="marquee-item"><span>🍎</span> Apple</div>
+        <div class="marquee-item"><span>🎬</span> Netflix</div>
+        <div class="marquee-item"><span>🚀</span> SpaceX</div>
+        <div class="marquee-item"><span>💡</span> Tesla</div>
+        <div class="marquee-item"><span>🔵</span> Meta</div>
+        <div class="marquee-item"><span>☁️</span> Salesforce</div>
+        <div class="marquee-item"><span>🐦</span> Airbnb</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ LEARNING PATHS ═══════════════ -->
+  <section class="section-pad" id="paths">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">🗺 Structured Paths</div>
+        <h2>Your Dream Career <span class="gradient-text">Starts Here</span></h2>
+        <div class="divider"></div>
+        <p>Curated, milestone-driven learning sequences designed by industry experts — not random playlists.</p>
+      </div>
+      <div class="grid-4 reveal">
+        <div class="path-card" style="--path-color:var(--grad-primary);--path-bg:rgba(37,99,235,0.1)">
+          <div class="path-icon">💻</div>
+          <div class="path-title">Full-Stack Development</div>
+          <div class="path-desc">HTML to React, Node.js, databases, deployment & DevOps in 6 months.</div>
+          <div class="path-meta">
+            <span>📚 42 modules</span>
+            <span>⏱ 6 months</span>
+          </div>
+          <div class="path-progress-wrap">
+            <div class="path-progress-label"><span>89K enrolled</span><span class="badge badge-blue">Trending</span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-bar" data-progress="72"></div>
+            </div>
+          </div>
+        </div>
+        <div class="path-card delay-1" style="--path-color:var(--grad-purple);--path-bg:rgba(124,58,237,0.1)">
+          <div class="path-icon">🤖</div>
+          <div class="path-title">AI & Machine Learning</div>
+          <div class="path-desc">Python, Neural Networks, LLMs, MLOps — from basics to production AI.</div>
+          <div class="path-meta">
+            <span>📚 56 modules</span>
+            <span>⏱ 9 months</span>
+          </div>
+          <div class="path-progress-wrap">
+            <div class="path-progress-label"><span>112K enrolled</span><span class="badge badge-purple">🔥 Hot</span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-bar purple" data-progress="85"></div>
+            </div>
+          </div>
+        </div>
+        <div class="path-card delay-2" style="--path-color:var(--grad-emerald);--path-bg:rgba(16,185,129,0.1)">
+          <div class="path-icon">📊</div>
+          <div class="path-title">Data Science & Analytics</div>
+          <div class="path-desc">SQL, Python, Pandas, Tableau, and business intelligence dashboards.</div>
+          <div class="path-meta">
+            <span>📚 38 modules</span>
+            <span>⏱ 5 months</span>
+          </div>
+          <div class="path-progress-wrap">
+            <div class="path-progress-label"><span>67K enrolled</span><span class="badge badge-green">New</span></div>
+            <div class="progress-wrap">
+              <div class="progress-bar green" data-progress="60"></div>
+            </div>
+          </div>
+        </div>
+        <div class="path-card delay-3" style="--path-color:var(--grad-amber);--path-bg:rgba(245,158,11,0.1)">
+          <div class="path-icon">🎨</div>
+          <div class="path-title">UX/UI Design Mastery</div>
+          <div class="path-desc">Figma, design systems, user research, prototyping, and portfolio building.</div>
+          <div class="path-meta">
+            <span>📚 29 modules</span>
+            <span>⏱ 4 months</span>
+          </div>
+          <div class="path-progress-wrap">
+            <div class="path-progress-label"><span>44K enrolled</span><span class="badge badge-amber">Popular</span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-bar amber" data-progress="55"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:var(--sp-10)" class="reveal delay-4">
+        <a href="student.html" class="btn btn-secondary btn-lg">View All 48 Paths →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TOP MENTORS ═══════════════ -->
+  <section class="section-pad" id="mentors" style="background:var(--bg-card)">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">👩‍💼 Live Mentors</div>
+        <h2>Learn From <span class="gradient-text-purple">Industry Experts</span></h2>
+        <div class="divider"></div>
+        <p>Real practitioners from FAANG, startups, and top agencies — available for 1-on-1 live sessions.</p>
+      </div>
+      <div class="grid-4 reveal">
+        <div class="mentor-card">
+          <div class="mentor-avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED)">
+            SR
+            <div class="live-dot"></div>
+          </div>
+          <div class="mentor-name">Sarah Rahman</div>
+          <div class="mentor-expertise">Senior ML Engineer · Ex-Google</div>
+          <div>
+            <span class="badge badge-live">● Live Now</span>
+          </div>
+          <div class="mentor-stats">
+            <div class="mentor-stat"><strong>4.9★</strong>Rating</div>
+            <div class="mentor-stat"><strong>3.2K</strong>Students</div>
+            <div class="mentor-stat"><strong>240</strong>Sessions</div>
+          </div>
+          <a href="student.html" class="btn btn-primary w-full"
+            style="margin-top:var(--sp-4);justify-content:center">Book Session</a>
+        </div>
+        <div class="mentor-card delay-1">
+          <div class="mentor-avatar" style="background:linear-gradient(135deg,#10B981,#059669)">
+            JL
+          </div>
+          <div class="mentor-name">James Liu</div>
+          <div class="mentor-expertise">Full-Stack Architect · CTO Startup</div>
+          <div>
+            <span class="badge badge-green">Available Today</span>
+          </div>
+          <div class="mentor-stats">
+            <div class="mentor-stat"><strong>4.8★</strong>Rating</div>
+            <div class="mentor-stat"><strong>2.8K</strong>Students</div>
+            <div class="mentor-stat"><strong>189</strong>Sessions</div>
+          </div>
+          <a href="student.html" class="btn btn-emerald w-full"
+            style="margin-top:var(--sp-4);justify-content:center">Book Session</a>
+        </div>
+        <div class="mentor-card delay-2">
+          <div class="mentor-avatar" style="background:linear-gradient(135deg,#7C3AED,#4F46E5)">
+            MP
+            <div class="live-dot"></div>
+          </div>
+          <div class="mentor-name">Maria Perez</div>
+          <div class="mentor-expertise">UX Director · Ex-Airbnb</div>
+          <div>
+            <span class="badge badge-live">● Live Now</span>
+          </div>
+          <div class="mentor-stats">
+            <div class="mentor-stat"><strong>5.0★</strong>Rating</div>
+            <div class="mentor-stat"><strong>4.1K</strong>Students</div>
+            <div class="mentor-stat"><strong>312</strong>Sessions</div>
+          </div>
+          <a href="student.html" class="btn btn-purple w-full"
+            style="margin-top:var(--sp-4);justify-content:center">Book Session</a>
+        </div>
+        <div class="mentor-card delay-3">
+          <div class="mentor-avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">
+            DK
+          </div>
+          <div class="mentor-name">David Kim</div>
+          <div class="mentor-expertise">DevOps Lead · AWS Expert</div>
+          <div>
+            <span class="badge badge-amber">Next: 2PM</span>
+          </div>
+          <div class="mentor-stats">
+            <div class="mentor-stat"><strong>4.7★</strong>Rating</div>
+            <div class="mentor-stat"><strong>1.9K</strong>Students</div>
+            <div class="mentor-stat"><strong>156</strong>Sessions</div>
+          </div>
+          <a href="student.html" class="btn btn-secondary w-full"
+            style="margin-top:var(--sp-4);justify-content:center">Book Session</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TRENDING COURSES ═══════════════ -->
+  <section class="section-pad" id="courses">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">📚 Trending Now</div>
+        <h2>Courses That <span class="gradient-text">Get You Hired</span></h2>
+        <div class="divider"></div>
+        <p>Continuously updated content crafted by practitioners, not academics.</p>
+      </div>
+      <div class="grid-4 reveal" id="courses-grid">
+        <!-- Course 1 -->
+        <div class="course-card">
+          <div class="course-card-thumb" style="background:linear-gradient(135deg,#0A1F44,#1E3A8A);font-size:3rem">
+            ⚛️
+            <span class="category-badge badge badge-blue" style="position:absolute;top:12px;left:12px">React</span>
+          </div>
+          <div class="course-card-body">
+            <div class="course-card-title">React 18 & Next.js 14 — Complete Masterclass</div>
+            <div class="course-card-instructor">👤 Alex Thompson · 89K students</div>
+            <div class="progress-wrap" style="margin:8px 0">
+              <div class="progress-bar" data-progress="0" style="--progress:0%"></div>
+            </div>
+            <div class="course-card-meta">
+              <div class="course-rating">⭐ 4.9 <span style="color:var(--txt-muted);font-weight:400">(12.4K)</span></div>
+              <div class="course-price">$49 <span class="original">$199</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Course 2 -->
+        <div class="course-card delay-1">
+          <div class="course-card-thumb" style="background:linear-gradient(135deg,#1a0533,#3B1281)">
+            🤖
+            <span class="category-badge badge badge-purple" style="position:absolute;top:12px;left:12px">AI/ML</span>
+          </div>
+          <div class="course-card-body">
+            <div class="course-card-title">GPT & LangChain — Build AI Apps from Scratch</div>
+            <div class="course-card-instructor">👤 Priya Patel · 142K students</div>
+            <div class="course-card-meta">
+              <div class="course-rating">⭐ 4.8 <span style="color:var(--txt-muted);font-weight:400">(18.7K)</span></div>
+              <div class="course-price">$79 <span class="original">$299</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Course 3 -->
+        <div class="course-card delay-2">
+          <div class="course-card-thumb" style="background:linear-gradient(135deg,#022c22,#065f46)">
+            🐍
+            <span class="category-badge badge badge-green" style="position:absolute;top:12px;left:12px">Python</span>
+          </div>
+          <div class="course-card-body">
+            <div class="course-card-title">Python for Data Science & Machine Learning Bootcamp</div>
+            <div class="course-card-instructor">👤 Chen Wei · 203K students</div>
+            <div class="course-card-meta">
+              <div class="course-rating">⭐ 4.9 <span style="color:var(--txt-muted);font-weight:400">(31.2K)</span></div>
+              <div class="course-price">$59 <span class="original">$249</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- Course 4 -->
+        <div class="course-card delay-3">
+          <div class="course-card-thumb" style="background:linear-gradient(135deg,#431407,#7c2d12)">
+            ☁️
+            <span class="category-badge badge badge-amber" style="position:absolute;top:12px;left:12px">Cloud</span>
+          </div>
+          <div class="course-card-body">
+            <div class="course-card-title">AWS Solutions Architect — Professional Certification</div>
+            <div class="course-card-instructor">👤 Marcus Jordan · 76K students</div>
+            <div class="course-card-meta">
+              <div class="course-rating">⭐ 4.7 <span style="color:var(--txt-muted);font-weight:400">(9.1K)</span></div>
+              <div class="course-price">$89 <span class="original">$349</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:var(--sp-10)" class="reveal">
+        <a href="student.html" class="btn btn-primary btn-lg">Browse 18,500+ Courses →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section class="section-pad how-section" id="how">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">⚙️ How It Works</div>
+        <h2>From Zero to <span class="gradient-text">Career-Ready</span> in 3 Steps</h2>
+        <div class="divider"></div>
+      </div>
+      <div class="how-grid reveal">
+        <div class="how-item">
+          <div class="how-step-count">1</div>
+          <div class="step-icon-wrap" style="margin:0 auto var(--sp-4)">🎯</div>
+          <div class="how-title">Choose Your Path</div>
+          <div class="how-desc">Answer 5 quick questions. Our AI maps your ideal learning journey — no overwhelm, just
+            clarity.</div>
+        </div>
+        <div class="how-item delay-2">
+          <div class="how-step-count" style="background:var(--grad-purple)">2</div>
+          <div class="step-icon-wrap" style="margin:0 auto var(--sp-4)">🚀</div>
+          <div class="how-title">Learn & Practice</div>
+          <div class="how-desc">Bite-sized video lessons, live sessions, projects, and AI-powered quizzes — all in one
+            flow.</div>
+        </div>
+        <div class="how-item delay-4">
+          <div class="how-step-count" style="background:var(--grad-emerald)">3</div>
+          <div class="step-icon-wrap" style="margin:0 auto var(--sp-4)">🏆</div>
+          <div class="how-title">Get Certified & Hired</div>
+          <div class="how-desc">Earn verifiable credentials, build a portfolio, and get matched with career
+            opportunities.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ AI FEATURES ═══════════════ -->
+  <section class="section-pad ai-section" id="ai">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">🤖 AI-Powered</div>
+        <h2>Your Personal AI <span class="gradient-text-purple">Learning Engine</span></h2>
+        <div class="divider"></div>
+        <p>More than a chatbot. A full intelligent tutor that adapts, challenges, and grows with you.</p>
+      </div>
+      <div class="grid-3 reveal">
+        <div class="ai-feature-card">
+          <div class="ai-feature-icon"
+            style="background:linear-gradient(135deg,rgba(37,99,235,0.15),rgba(79,70,229,0.15))">🧠</div>
+          <h4>Adaptive Learning Engine</h4>
+          <p>AI analyzes your speed and understanding to dynamically adjust content difficulty and pacing in real-time.
+          </p>
+        </div>
+        <div class="ai-feature-card delay-1">
+          <div class="ai-feature-icon"
+            style="background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(79,70,229,0.15))">📝</div>
+          <h4>Auto Quiz Generator</h4>
+          <p>Instant quizzes generated from any lesson. Spaced repetition ensures concepts stick long-term.</p>
+        </div>
+        <div class="ai-feature-card delay-2">
+          <div class="ai-feature-icon"
+            style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.15))">💬</div>
+          <h4>24/7 AI Tutor Chat</h4>
+          <p>Ask anything, anytime. Get code explanations, concept breakdowns, and personalised examples instantly.</p>
+        </div>
+        <div class="ai-feature-card delay-1">
+          <div class="ai-feature-icon"
+            style="background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(239,68,68,0.15))">📊</div>
+          <h4>Weekly Learning Reports</h4>
+          <p>Detailed insights into your progress, strengths, weaknesses, and next recommended actions each week.</p>
+        </div>
+        <div class="ai-feature-card delay-2">
+          <div class="ai-feature-icon"
+            style="background:linear-gradient(135deg,rgba(244,63,94,0.15),rgba(239,68,68,0.15))">🎯</div>
+          <h4>Smart Path Recommender</h4>
+          <p>AI cross-references your goals, skills, and market demand to suggest the highest ROI learning path.</p>
+        </div>
+        <div class="ai-feature-card delay-3">
+          <div class="ai-feature-icon"
+            style="background:linear-gradient(135deg,rgba(37,99,235,0.15),rgba(16,185,129,0.15))">🔬</div>
+          <h4>Code Review Assistant</h4>
+          <p>Submit any code and receive instant AI feedback on quality, best practices, bugs, and performance.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ COMMUNITY ═══════════════ -->
+  <section class="section-pad community-section" id="community">
+    <div class="container">
+      <div class="community-grid">
+        <div>
+          <div class="reveal">
+            <div class="section-label">🌍 Community</div>
+            <h2>Learn Together.<br><span class="gradient-text-emerald">Grow Together.</span></h2>
+            <div class="divider" style="margin:var(--sp-4) 0"></div>
+            <p style="font-size:var(--text-lg);max-width:480px;margin-bottom:var(--sp-8)">A thriving global community of
+              2.4 million learners — ask questions, join study groups, compete on leaderboards.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--sp-3)">
+            <div class="forum-post reveal delay-1">
+              <div class="forum-vote">
+                <button>▲</button>
+                <div class="forum-vote-count">142</div>
+                <button>▼</button>
+              </div>
+              <div class="forum-content">
+                <div class="forum-title">How do I optimize React re-renders with useMemo vs useCallback?</div>
+                <div class="forum-meta">
+                  <span>💬 23 replies</span>
+                  <span>👤 Alex K. · Full-Stack Path</span>
+                  <span>🕐 2 hours ago</span>
+                  <span class="badge badge-green">Solved</span>
+                </div>
+              </div>
+            </div>
+            <div class="forum-post reveal delay-2">
+              <div class="forum-vote">
+                <button>▲</button>
+                <div class="forum-vote-count">89</div>
+                <button>▼</button>
+              </div>
+              <div class="forum-content">
+                <div class="forum-title">My portfolio project: E-commerce app with Auth — feedback welcome!</div>
+                <div class="forum-meta">
+                  <span>💬 41 replies</span>
+                  <span>👤 Mia T. · React Path</span>
+                  <span>🕐 5 hours ago</span>
+                  <span class="badge badge-blue">Showcase</span>
+                </div>
+              </div>
+            </div>
+            <div class="forum-post reveal delay-3">
+              <div class="forum-vote">
+                <button>▲</button>
+                <div class="forum-vote-count">234</div>
+                <button>▼</button>
+              </div>
+              <div class="forum-content">
+                <div class="forum-title">Weekly Challenge: Build a live chat app in 48 hours — $500 prize 🏆</div>
+                <div class="forum-meta">
+                  <span>💬 187 replies</span>
+                  <span>👤 LearNova Official</span>
+                  <span>🕐 1 day ago</span>
+                  <span class="badge badge-purple">Challenge</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Leaderboard -->
+        <div class="reveal delay-2">
+          <div class="card" style="position:sticky;top:calc(var(--nav-h) + 24px)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-5)">
+              <h4>🏆 Weekly Leaderboard</h4>
+              <span class="badge badge-amber">Live</span>
+            </div>
+            <div class="leaderboard-item">
+              <div class="leaderboard-rank rank-1">🥇</div>
+              <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">JL</div>
+              <div class="leaderboard-name">Jamie L.</div>
+              <div class="leaderboard-xp">12,840 XP</div>
+            </div>
+            <div class="leaderboard-item">
+              <div class="leaderboard-rank rank-2">🥈</div>
+              <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5)">SR</div>
+              <div class="leaderboard-name">Sofia R.</div>
+              <div class="leaderboard-xp">11,210 XP</div>
+            </div>
+            <div class="leaderboard-item">
+              <div class="leaderboard-rank rank-3">🥉</div>
+              <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#10B981,#059669)">AK</div>
+              <div class="leaderboard-name">Arjun K.</div>
+              <div class="leaderboard-xp">10,780 XP</div>
+            </div>
+            <div class="leaderboard-item">
+              <div class="leaderboard-rank" style="color:var(--txt-muted)">4</div>
+              <div class="avatar avatar-sm">MP</div>
+              <div class="leaderboard-name">Maya P.</div>
+              <div class="leaderboard-xp">9,450 XP</div>
+            </div>
+            <div class="leaderboard-item">
+              <div class="leaderboard-rank" style="color:var(--txt-muted)">5</div>
+              <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#06B6D4)">TW</div>
+              <div class="leaderboard-name">Tom W.</div>
+              <div class="leaderboard-xp">8,920 XP</div>
+            </div>
+            <div style="margin-top:var(--sp-5);padding-top:var(--sp-4);border-top:1px solid var(--bdr-subtle)">
+              <div
+                style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);background:rgba(37,99,235,0.07);border-radius:var(--radius-md)">
+                <div class="avatar avatar-sm" style="background:var(--grad-primary)">YO</div>
+                <div style="flex:1">
+                  <div style="font-size:var(--text-sm);font-weight:600;color:var(--txt-primary)">You</div>
+                  <div style="font-size:var(--text-xs);color:var(--txt-muted)">#42 this week</div>
+                </div>
+                <div class="leaderboard-xp">5,320 XP</div>
+              </div>
+            </div>
+            <a href="student.html" class="btn btn-primary w-full"
+              style="justify-content:center;margin-top:var(--sp-5)">Join Community →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TESTIMONIALS ═══════════════ -->
+  <section class="section-pad testimonials-section">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">💬 Success Stories</div>
+        <h2>Real Results from <span class="gradient-text">Real Learners</span></h2>
+        <div class="divider"></div>
+      </div>
+      <div class="carousel-track-wrap reveal">
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <div class="testimonial-card">
+              <div class="quote-mark">"</div>
+              <div class="testimonial-text">LearNova's AI tutor helped me understand algorithms I'd struggled with for
+                years. The live mentorship sealed the deal — I landed a $140k backend role at a FAANG company within 8
+                months.</div>
+              <div class="testimonial-author">
+                <div class="avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED)">RM</div>
+                <div class="author-info">
+                  <strong>Ravi Menon</strong>
+                  <span>Software Engineer → Senior SWE @ Amazon</span>
+                </div>
+                <div style="margin-left:auto">
+                  <div style="font-size:14px;color:var(--clr-amber)">⭐⭐⭐⭐⭐</div>
+                  <div class="badge badge-green" style="margin-top:4px">+$60K Salary Increase</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="testimonial-card">
+              <div class="quote-mark">"</div>
+              <div class="testimonial-text">I went from knowing zero code to launching a full SaaS product in 11 months.
+                The structured path removed all the guesswork. I now run a company making $30K/month.</div>
+              <div class="testimonial-author">
+                <div class="avatar" style="background:linear-gradient(135deg,#10B981,#059669)">AS</div>
+                <div class="author-info">
+                  <strong>Amara Sow</strong>
+                  <span>Marketing Manager → Founder, TechStart</span>
+                </div>
+                <div style="margin-left:auto">
+                  <div style="font-size:14px;color:var(--clr-amber)">⭐⭐⭐⭐⭐</div>
+                  <div class="badge badge-purple" style="margin-top:4px">Entrepreneur</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="testimonial-card">
+              <div class="quote-mark">"</div>
+              <div class="testimonial-text">The community and weekly challenges kept me accountable. I never felt alone.
+                Top-notch instructors, real projects, and the AI quiz system is next level. Worth every penny.</div>
+              <div class="testimonial-author">
+                <div class="avatar" style="background:linear-gradient(135deg,#7C3AED,#4F46E5)">LK</div>
+                <div class="author-info">
+                  <strong>Lena Kovalenko</strong>
+                  <span>UX Designer → Product Lead @ Fintech</span>
+                </div>
+                <div style="margin-left:auto">
+                  <div style="font-size:14px;color:var(--clr-amber)">⭐⭐⭐⭐⭐</div>
+                  <div class="badge badge-blue" style="margin-top:4px">Top Learner</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="testimonial-card">
+              <div class="quote-mark">"</div>
+              <div class="testimonial-text">I studied data science on LearNova while working full-time. The flexible
+                live sessions and AI-powered progress tracking helped me fit it around my schedule perfectly.</div>
+              <div class="testimonial-author">
+                <div class="avatar" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">JM</div>
+                <div class="author-info">
+                  <strong>Jason Miller</strong>
+                  <span>Accountant → Data Scientist @ Netflix</span>
+                </div>
+                <div style="margin-left:auto">
+                  <div style="font-size:14px;color:var(--clr-amber)">⭐⭐⭐⭐⭐</div>
+                  <div class="badge badge-amber" style="margin-top:4px">Career Switch</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-controls">
+        <button class="carousel-btn prev">←</button>
+        <div class="carousel-dots"></div>
+        <button class="carousel-btn next">→</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PRICING ═══════════════ -->
+  <section class="section-pad pricing-section" id="pricing">
+    <div class="container">
+      <div class="section-header text-center reveal">
+        <div class="section-label">💳 Pricing</div>
+        <h2>Invest in Your <span class="gradient-text">Future</span></h2>
+        <div class="divider"></div>
+        <p>No hidden fees. Cancel anytime. 14-day money-back guarantee.</p>
+      </div>
+      <div class="pricing-toggle-wrap reveal">
+        <div class="pricing-toggle">
+          <label id="monthly-btn" class="active" style="cursor:pointer">Monthly</label>
+          <label id="annual-btn" style="cursor:pointer">Annual <span class="annual-save pricing-save"
+              style="display:none">Save 40%</span></label>
+        </div>
+      </div>
+      <div class="pricing-cards-grid reveal">
+        <div class="pricing-card">
+          <div class="pricing-name">Basic</div>
+          <div class="price-value"><span>$</span><span data-monthly="19" data-annual="11">19</span></div>
+          <div class="price-period">per month</div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="feature-icon">✅</span> Access to 500+ free courses</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> AI Tutor (10 queries/day)</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Community access</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Mobile app access</li>
+            <li class="feature-item" style="opacity:0.4"><span class="feature-icon">❌</span> Live mentorship sessions
+            </li>
+            <li class="feature-item" style="opacity:0.4"><span class="feature-icon">❌</span> Certificates</li>
+          </ul>
+          <a href="pricing.html" class="btn btn-secondary w-full" style="justify-content:center">Get Started Free</a>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-badge">MOST POPULAR</div>
+          <div class="pricing-name">Pro</div>
+          <div class="price-value"><span>$</span><span data-monthly="49" data-annual="29">49</span></div>
+          <div class="price-period">per month</div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="feature-icon">✅</span> Unlimited course access</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Unlimited AI Tutor</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> 4 mentor sessions/month</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Verified certificates</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> All learning paths</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Priority support</li>
+          </ul>
+          <a href="pricing.html" class="btn w-full"
+            style="background:rgba(255,255,255,0.2);color:#fff;border:1.5px solid rgba(255,255,255,0.3);justify-content:center">Start
+            Pro Trial →</a>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-name">Premium</div>
+          <div class="price-value"><span>$</span><span data-monthly="99" data-annual="59">99</span></div>
+          <div class="price-period">per month</div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="feature-icon">✅</span> Everything in Pro</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Unlimited mentor sessions</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> 1-on-1 career coaching</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Job placement support</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Team / business account</li>
+            <li class="feature-item"><span class="feature-icon">✅</span> Custom learning paths</li>
+          </ul>
+          <a href="pricing.html" class="btn btn-primary w-full" style="justify-content:center">Go Premium →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ CTA BANNER ═══════════════ -->
+  <section class="cta-section">
+    <div class="hero-orbs">
+      <div class="orb"
+        style="width:400px;height:400px;background:var(--clr-electric);top:-100px;right:-50px;opacity:0.15"></div>
+      <div class="orb"
+        style="width:350px;height:350px;background:var(--clr-purple-deep);bottom:-50px;left:10%;opacity:0.15;animation-delay:3s">
+      </div>
+    </div>
+    <div class="container text-center" style="position:relative;z-index:2">
+      <div class="reveal">
+        <div class="section-label" style="margin-bottom:var(--sp-5);display:inline-flex">🚀 Start Today</div>
+        <h2>Your Next Career Chapter<br>Starts <span
+            style="background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Right
+            Now</span></h2>
+        <p>Join 2.4 million learners. No credit card required for the first 14 days.</p>
+        <div class="hero-actions" style="justify-content:center">
+          <a href="student.html" class="btn btn-xl"
+            style="background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;box-shadow:0 6px 30px rgba(37,99,235,0.4)">🎓
+            Start Learning Free</a>
+          <a href="teacher.html" class="btn btn-xl"
+            style="background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.25)">🎙 Teach on
+            LearNova</a>
+        </div>
+        <p style="margin-top:var(--sp-6);font-size:var(--text-sm);color:rgba(255,255,255,0.45)">
+          ✅ No credit card required &nbsp;·&nbsp; ✅ 14-day money back &nbsp;·&nbsp; ✅ Cancel anytime
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="nav-logo" style="color:#fff">
+            <div class="logo-icon">🎓</div>
+            Learn<span style="color:var(--clr-electric-lt)">Nova</span>
+          </a>
+          <p>The world's most advanced learning platform combining AI, live mentorship, and structured career paths into
+            one powerful ecosystem.</p>
+          <div class="footer-social">
+            <a href="#" class="social-btn" aria-label="Twitter">𝕏</a>
+            <a href="#" class="social-btn" aria-label="LinkedIn">in</a>
+            <a href="#" class="social-btn" aria-label="YouTube">▶</a>
+            <a href="#" class="social-btn" aria-label="Instagram">📸</a>
+            <a href="#" class="social-btn" aria-label="Discord">💬</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Platform</div>
+          <div class="footer-links">
+            <a href="#paths">Learning Paths</a>
+            <a href="#courses">Course Library</a>
+            <a href="#mentors">Live Mentors</a>
+            <a href="student.html">Student Dashboard</a>
+            <a href="teacher.html">Teach with Us</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Resources</div>
+          <div class="footer-links">
+            <a href="#">Blog & Tutorials</a>
+            <a href="#">Career Center</a>
+            <a href="#">Certifications</a>
+            <a href="#">Scholarship Program</a>
+            <a href="#">Developer API</a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <div class="footer-links">
+            <a href="#">About LearNova</a>
+            <a href="#">Careers (24 open)</a>
+            <a href="#">Press & Media</a>
+            <a href="#">Partnerships</a>
+            <a href="#">Contact Us</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 LearNova Inc. All rights reserved.</span>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Cookie Policy</a>
+          <a href="#">Accessibility</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AI Widget -->
+  <div class="ai-widget" id="ai-widget">
+    <div class="ai-chat" id="ai-chat">
+      <div class="ai-chat-header">
+        <div class="ai-avatar">🤖</div>
+        <div>
+          <strong>Nova AI Tutor</strong>
+          <span>● Always online</span>
+        </div>
+      </div>
+      <div class="ai-chat-messages" id="ai-messages">
+        <div class="chat-msg bot">👋 Hey! I'm Nova, your AI tutor. What would you like to learn today?</div>
+      </div>
+      <form class="ai-chat-input" id="ai-form">
+        <input type="text" id="ai-input" placeholder="Ask me anything..." autocomplete="off" />
+        <button type="submit" class="btn btn-primary btn-sm">→</button>
+      </form>
+    </div>
+    <button class="ai-btn" id="ai-toggle" aria-label="Open AI Tutor">🤖</button>
+  </div>
+
+  <script src="js/theme.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    // Dynamic nav: swap Sign In / Get Started with Dashboard + Avatar when logged in
+    getSession().then(session => {
+      if (!session) return;
+      const signIn = document.getElementById('nav-signin');
+      const getStarted = document.getElementById('nav-getstarted');
+      const name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'You';
+      const initials = getInitials(name);
+      if (signIn) {
+        signIn.href = 'student.html';
+        signIn.textContent = 'Dashboard →';
+        signIn.className = 'btn btn-ghost btn-sm';
+      }
+      if (getStarted) {
+        getStarted.outerHTML =
+          `<div class="avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED);cursor:pointer;font-size:13px" onclick="window.location='student.html'" title="${name}">${initials}</div>`;
+      }
+    });
+  </script>
+  <script>
+    // ── Load real courses from Supabase into the homepage grid ──────
+    (async function loadHomepageCourses() {
+      const grid = document.getElementById('courses-grid');
+      if (!grid) return;
+      const { data: courses } = await supabaseClient
+        .from('courses')
+        .select('id, title, instructor_name, thumbnail_emoji, thumbnail_bg, badge_color, category, rating, reviews_count, price, original_price, students_count')
+        .eq('is_published', true)
+        .order('students_count', { ascending: false })
+        .limit(4);
+      if (!courses || courses.length === 0) return; // keep static fallback
+      const delays = ['', ' delay-1', ' delay-2', ' delay-3'];
+      grid.innerHTML = courses.map((c, i) => `
+        <div class="course-card${delays[i]}">
+          <div class="course-card-thumb" style="background:${c.thumbnail_bg};font-size:3rem">
+            ${c.thumbnail_emoji}
+            <span class="category-badge badge ${c.badge_color}" style="position:absolute;top:12px;left:12px">${c.category}</span>
+          </div>
+          <div class="course-card-body">
+            <div class="course-card-title">${c.title}</div>
+            <div class="course-card-instructor">👤 ${c.instructor_name} · ${(c.students_count / 1000).toFixed(0)}K students</div>
+            <div class="course-card-meta">
+              <div class="course-rating">⭐ ${c.rating} <span style="color:var(--txt-muted);font-weight:400">(${(c.reviews_count / 1000).toFixed(1)}K)</span></div>
+              <div class="course-price">$${c.price}${c.original_price ? ` <span class="original">$${c.original_price}</span>` : ''}</div>
+            </div>
+          </div>
+        </div>`).join('');
+    })();
+  </script>
+</body>
+
+</html>

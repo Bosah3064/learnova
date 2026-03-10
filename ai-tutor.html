@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Tutor — LearNova</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h)
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto
+        }
+
+        .dash-main {
+            flex: 1;
+            background: var(--bg-page);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - var(--nav-h));
+            overflow: hidden
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, .06)
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3)
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: 700
+        }
+
+        .sidebar-user-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, .45)
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--sp-4) var(--sp-3)
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            padding: var(--sp-3) var(--sp-2) var(--sp-1)
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            padding: var(--sp-2) var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, .6);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            transition: all .18s;
+            margin-bottom: 2px
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, .07);
+            color: #fff
+        }
+
+        .sidebar-link.active {
+            background: rgba(37, 99, 235, .25);
+            color: var(--clr-electric)
+        }
+
+        .sidebar-link .icon {
+            width: 20px;
+            text-align: center
+        }
+
+        @media(max-width:1024px) {
+            .dash-sidebar {
+                display: none
+            }
+        }
+
+        .chat-header {
+            padding: var(--sp-4) var(--sp-6);
+            border-bottom: 1px solid var(--bdr-subtle);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            flex-shrink: 0;
+            background: var(--bg-sidebar)
+        }
+
+        .chat-nova {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--grad-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, .4)
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(37, 99, 235, 0)
+            }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--sp-6);
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-4)
+        }
+
+        .msg {
+            max-width: 680px;
+            display: flex;
+            gap: var(--sp-3);
+            align-items: flex-start
+        }
+
+        .msg.user {
+            flex-direction: row-reverse;
+            margin-left: auto
+        }
+
+        .msg-bubble {
+            padding: var(--sp-3) var(--sp-4);
+            border-radius: var(--radius-lg);
+            font-size: var(--text-sm);
+            line-height: 1.6
+        }
+
+        .msg.nova .msg-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            color: var(--txt-primary);
+            border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg)
+        }
+
+        .msg.user .msg-bubble {
+            background: var(--grad-primary);
+            color: #fff;
+            border-radius: var(--radius-lg) 4px var(--radius-lg) var(--radius-lg)
+        }
+
+        .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            background: var(--grad-primary)
+        }
+
+        .chat-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--sp-2);
+            padding: 0 var(--sp-6) var(--sp-4)
+        }
+
+        .suggestion-chip {
+            padding: var(--sp-2) var(--sp-4);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: 999px;
+            font-size: var(--text-xs);
+            color: var(--txt-secondary);
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap
+        }
+
+        .suggestion-chip:hover {
+            border-color: var(--clr-electric);
+            color: var(--clr-electric)
+        }
+
+        .chat-input-area {
+            padding: var(--sp-4) var(--sp-6);
+            border-top: 1px solid var(--bdr-subtle);
+            background: var(--bg-sidebar);
+            flex-shrink: 0
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: var(--sp-3);
+            align-items: flex-end;
+            background: var(--bg-card);
+            border: 1.5px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-3) var(--sp-4);
+            transition: border-color .2s
+        }
+
+        .chat-input-row:focus-within {
+            border-color: var(--clr-electric)
+        }
+
+        .chat-textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--txt-primary);
+            font-size: var(--text-sm);
+            font-family: var(--font-body);
+            resize: none;
+            max-height: 120px;
+            min-height: 24px;
+            line-height: 1.5
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: var(--sp-3) var(--sp-4)
+        }
+
+        .typing span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--txt-muted);
+            animation: bounce .8s infinite
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: .15s
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: .3s
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0)
+            }
+
+            30% {
+                transform: translateY(-8px)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo"><span>Learn</span><span class="logo-accent">Nova</span></a>
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#7C3AED)" data-user-initials>
+                JD</div>
+        </div>
+    </nav>
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);background-size:cover;background-position:center"
+                        data-user-initials>JD</div>
+                    <div class="sidebar-user-info"><strong data-user-name>Learner</strong><span
+                            id="sidebar-level-label">Level 1 · Student</span></div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link active"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+        <div class="dash-main" id="chat-shell">
+            <div class="chat-header">
+                <div class="chat-nova">🤖</div>
+                <div>
+                    <div style="font-weight:700;color:var(--txt-primary)">Nova AI Tutor</div>
+                    <div style="font-size:var(--text-xs);color:var(--clr-emerald)">● Always available</div>
+                </div>
+                <div style="margin-left:auto;font-size:var(--text-xs);color:var(--txt-muted)">Powered by AI ·
+                    Personalized to your courses</div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="msg nova">
+                    <div class="msg-avatar">🤖</div>
+                    <div>
+                        <div class="msg-bubble">👋 Hi <span data-user-name>there</span>! I'm <strong>Nova</strong>, your
+                            personal AI tutor on LearNova.<br><br>I can help you:<br>• Understand concepts from your
+                            courses<br>• Review and explain code<br>• Quiz you on topics to reinforce learning<br>•
+                            Answer any programming questions<br><br>What would you like to learn today?</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-suggestions" id="suggestions">
+                <div class="suggestion-chip" onclick="sendSuggestion(this)">Explain React hooks to me</div>
+                <div class="suggestion-chip" onclick="sendSuggestion(this)">What is a closure in JavaScript?</div>
+                <div class="suggestion-chip" onclick="sendSuggestion(this)">How does async/await work?</div>
+                <div class="suggestion-chip" onclick="sendSuggestion(this)">Quiz me on Python basics</div>
+                <div class="suggestion-chip" onclick="sendSuggestion(this)">Explain machine learning to a beginner</div>
+            </div>
+            <div class="chat-input-area">
+                <div class="chat-input-row">
+                    <textarea class="chat-textarea" id="chat-input" rows="1"
+                        placeholder="Ask anything about your courses…" onkeydown="handleKey(event)"
+                        oninput="autoResize(this)"></textarea>
+                    <button class="btn btn-primary btn-sm" onclick="sendMessage()"
+                        style="flex-shrink:0;border-radius:var(--radius-md)">Send →</button>
+                </div>
+                <div style="text-align:center;margin-top:var(--sp-2);font-size:11px;color:var(--txt-muted)">Nova AI ·
+                    Answers may not always be accurate. Verify important information.</div>
+            </div>
+        </div>
+    </div>
+    <script src="js/theme.js"></script>
+    <script>
+        (async function () {
+            await new Promise(r => { if (window.LN_USER) return r(); const t = setInterval(() => { if (window.LN_USER) { clearInterval(t); r(); } }, 50); setTimeout(() => { clearInterval(t); r(); }, 5000); });
+            const userId = window.LN_USER?.id;
+            if (!userId) return;
+            const { data: prof } = await supabaseClient.from('profiles').select('xp,role,avatar_url').eq('id', userId).single();
+            if (prof) {
+                const lv = Math.floor((prof.xp || 0) / 500) + 1;
+                const sl = document.getElementById('sidebar-level-label');
+                if (sl) sl.textContent = `${prof.role === 'teacher' ? 'Instructor' : 'Student'} · Level ${lv}`;
+                if (prof.avatar_url) { const a = document.getElementById('sb-avatar'); if (a) { a.style.backgroundImage = `url(${prof.avatar_url})`; a.textContent = ''; } }
+            }
+        })();
+
+        const RESPONSES = {
+            hook: `**React Hooks** allow you to use state and other React features in function components.\n\nThe most common hooks:\n- \`useState\` — adds local state\n- \`useEffect\` — runs side effects\n- \`useContext\` — reads context\n- \`useRef\` — holds a mutable value\n\n**Example:**\n\`\`\`javascript\nfunction Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(c => c+1)}>{count}</button>;\n}\n\`\`\``,
+            closure: `A **closure** in JavaScript is when a function "remembers" variables from its outer scope, even after that scope has returned.\n\n\`\`\`javascript\nfunction makeCounter() {\n  let count = 0; // outer variable\n  return function() {\n    count++; // inner function closes over count\n    return count;\n  };\n}\nconst counter = makeCounter();\ncounter(); // 1\ncounter(); // 2\n\`\`\`\n\nClosures are the foundation of modules, currying, and many design patterns!`,
+            async: `**async/await** is syntactic sugar over Promises, making async code look synchronous.\n\n\`\`\`javascript\n// Without async/await:\nfetch('/api/data')\n  .then(res => res.json())\n  .then(data => console.log(data));\n\n// With async/await:\nasync function getData() {\n  const res  = await fetch('/api/data');\n  const data = await res.json();\n  console.log(data);\n}\n\`\`\`\n\n**Rules:**\n- Use \`async\` before the function declaration\n- \`await\` pauses until the Promise resolves\n- Wrap in \`try/catch\` for error handling`,
+            default: (q) => `Great question! You asked: "${q}"\n\nHere's what I know:\n\nThis is a complex topic that I'd love to dive into. In your LearNova courses, you'll find dedicated modules covering this in detail.\n\nMy best summary:\n- Break the problem into smaller pieces\n- Practice with hands-on exercises\n- Review the relevant module in your course reader\n\nWould you like me to explain a specific part in more detail? 🎯`
+        };
+
+        function addMessage(role, content) {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `msg ${role}`;
+            const avatar = role === 'nova' ? '<div class="msg-avatar">🤖</div>' : `<div class="msg-avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED)" data-user-initials>${window.LN_INITIALS || 'U'}</div>`;
+            const formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`([^`]+)`/g, '<code style="background:var(--bg-card-hover);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.85em">$1</code>').replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre style="background:var(--bg-card);border:1px solid var(--bdr-subtle);border-radius:var(--radius-md);padding:var(--sp-3) var(--sp-4);overflow-x:auto;margin-top:var(--sp-2);font-size:0.85em;font-family:monospace">$1</pre>').replace(/\n/g, '<br>');
+            div.innerHTML = role === 'nova' ? `${avatar}<div><div class="msg-bubble">${formatted}</div></div>` : `<div><div class="msg-bubble">${content}</div></div>${avatar}`;
+            msgs.appendChild(div);
+            msgs.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+        }
+
+        function showTyping() {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg nova'; div.id = 'typing-indicator';
+            div.innerHTML = `<div class="msg-avatar">🤖</div><div class="typing"><span></span><span></span><span></span></div>`;
+            msgs.appendChild(div); msgs.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+        }
+
+        function hideTyping() { document.getElementById('typing-indicator')?.remove(); }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = ''; autoResize(input);
+            document.getElementById('suggestions').style.display = 'none';
+            addMessage('user', text);
+            showTyping();
+            await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
+            hideTyping();
+            const q = text.toLowerCase();
+            let response;
+            if (q.includes('hook')) response = RESPONSES.hook;
+            else if (q.includes('closure')) response = RESPONSES.closure;
+            else if (q.includes('async') || q.includes('await')) response = RESPONSES.async;
+            else response = RESPONSES.default(text);
+            addMessage('nova', response);
+        }
+
+        function sendSuggestion(chip) { document.getElementById('chat-input').value = chip.textContent; sendMessage(); }
+        function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+    </script>
+</body>
+
+</html>

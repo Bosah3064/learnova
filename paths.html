@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning Paths — LearNova</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h)
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page);
+            overflow-x: hidden
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, .06)
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3)
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: 700
+        }
+
+        .sidebar-user-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, .45)
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--sp-4) var(--sp-3)
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            padding: var(--sp-3) var(--sp-2) var(--sp-1)
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            padding: var(--sp-2) var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, .6);
+            text-decoration: none;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            transition: all .18s;
+            margin-bottom: 2px
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, .07);
+            color: #fff
+        }
+
+        .sidebar-link.active {
+            background: rgba(37, 99, 235, .25);
+            color: var(--clr-electric)
+        }
+
+        .sidebar-link .icon {
+            width: 20px;
+            text-align: center
+        }
+
+        @media(max-width:1024px) {
+            .dash-sidebar {
+                display: none
+            }
+        }
+
+        .paths-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--sp-6);
+            margin-top: var(--sp-6)
+        }
+
+        .path-card {
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid var(--bdr-subtle);
+            background: var(--bg-card);
+            transition: transform .2s, box-shadow .2s;
+            cursor: pointer
+        }
+
+        .path-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg)
+        }
+
+        .path-hero {
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden
+        }
+
+        .path-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, .5))
+        }
+
+        .path-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, .5);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-size: 11px;
+            color: #fff;
+            font-weight: 700;
+            z-index: 1
+        }
+
+        .path-body {
+            padding: var(--sp-5)
+        }
+
+        .path-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--txt-primary);
+            margin-bottom: var(--sp-2)
+        }
+
+        .path-desc {
+            font-size: var(--text-sm);
+            color: var(--txt-muted);
+            margin-bottom: var(--sp-4);
+            line-height: 1.6
+        }
+
+        .skill-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--sp-2);
+            margin-bottom: var(--sp-4)
+        }
+
+        .skill-pill {
+            padding: 3px 10px;
+            background: var(--bg-card-hover);
+            border-radius: 999px;
+            font-size: 11px;
+            color: var(--txt-secondary)
+        }
+
+        .path-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: var(--sp-3);
+            border-top: 1px solid var(--bdr-subtle)
+        }
+
+        .path-meta span {
+            font-size: var(--text-xs);
+            color: var(--txt-muted)
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo"><span>Learn</span><span class="logo-accent">Nova</span></a>
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#7C3AED)" data-user-initials>
+                JD</div>
+        </div>
+    </nav>
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);background-size:cover;background-position:center"
+                        data-user-initials>JD</div>
+                    <div class="sidebar-user-info"><strong data-user-name>Learner</strong><span
+                            id="sidebar-level-label">Level 1 · Student</span></div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link active"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+        <main class="dash-main">
+            <h1 style="font-size:1.5rem;font-weight:800;color:var(--txt-primary)">🗺 Learning Paths</h1>
+            <p style="color:var(--txt-muted);font-size:var(--text-sm);margin-top:var(--sp-1)">Structured journeys to
+                master in-demand skills. Follow a path or mix and match courses.</p>
+            <div class="paths-grid" id="paths-grid"></div>
+        </main>
+    </div>
+    <script src="js/theme.js"></script>
+    <script>
+        (async function () {
+            await new Promise(r => { if (window.LN_USER) return r(); const t = setInterval(() => { if (window.LN_USER) { clearInterval(t); r(); } }, 50); setTimeout(() => { clearInterval(t); r(); }, 5000); });
+            const userId = window.LN_USER?.id;
+            if (userId) {
+                const { data: prof } = await supabaseClient.from('profiles').select('xp,role,avatar_url').eq('id', userId).single();
+                if (prof) {
+                    const lv = Math.floor((prof.xp || 0) / 500) + 1;
+                    const sl = document.getElementById('sidebar-level-label');
+                    if (sl) sl.textContent = `${prof.role === 'teacher' ? 'Instructor' : 'Student'} · Level ${lv}`;
+                    if (prof.avatar_url) { const a = document.getElementById('sb-avatar'); if (a) { a.style.backgroundImage = `url(${prof.avatar_url})`; a.textContent = ''; } }
+                }
+            }
+
+            const PATHS = [
+                { emoji: '💻', grad: 'linear-gradient(135deg,#1e40af,#7c3aed)', title: 'Full-Stack Web Development', desc: 'Go from zero to full-stack developer. Learn HTML, CSS, JavaScript, React, Node.js, and databases.', skills: ['HTML/CSS', 'JavaScript', 'React', 'Node.js', 'PostgreSQL'], courses: 12, hours: 120, level: 'Beginner → Advanced', badge: '⭐ Most Popular' },
+                { emoji: '🤖', grad: 'linear-gradient(135deg,#065f46,#1d4ed8)', title: 'Data Science & Machine Learning', desc: 'Master Python, statistics, ML algorithms, and deep learning for real-world AI applications.', skills: ['Python', 'Pandas', 'scikit-learn', 'TensorFlow', 'SQL'], courses: 10, hours: 95, level: 'Intermediate', badge: '🔥 Trending' },
+                { emoji: '☁️', grad: 'linear-gradient(135deg,#7c2d12,#b45309)', title: 'Cloud & DevOps Engineering', desc: 'Deploy, scale, and manage applications on AWS, GCP, and Azure using modern DevOps practices.', skills: ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD'], courses: 8, hours: 80, level: 'Intermediate → Expert', badge: '💼 Career Boost' },
+                { emoji: '📱', grad: 'linear-gradient(135deg,#134e4a,#0e7490)', title: 'Mobile App Development', desc: 'Build native iOS and Android apps with React Native and Flutter from a single codebase.', skills: ['React Native', 'Flutter', 'Dart', 'iOS', 'Android'], courses: 9, hours: 90, level: 'Beginner → Advanced', badge: '📱 New' },
+                { emoji: '🔐', grad: 'linear-gradient(135deg,#1f2937,#374151)', title: 'Cybersecurity & Ethical Hacking', desc: 'Learn penetration testing, network security, cryptography, and how to protect systems.', skills: ['Linux', 'Networking', 'Python', 'Wireshark', 'CTF'], courses: 7, hours: 70, level: 'Intermediate', badge: '🔐 In Demand' },
+                { emoji: '🎨', grad: 'linear-gradient(135deg,#831843,#be185d)', title: 'UI/UX Design', desc: 'Design beautiful, user-centric products. From wireframes to high-fidelity prototypes in Figma.', skills: ['Figma', 'Prototyping', 'UX Research', 'Design Systems', 'CSS'], courses: 6, hours: 55, level: 'Beginner', badge: '🎨 Creative' },
+            ];
+
+            document.getElementById('paths-grid').innerHTML = PATHS.map(p => `
+    <div class="path-card">
+      <div class="path-hero" style="background:${p.grad}">
+        ${p.emoji}
+        <span class="path-badge">${p.badge}</span>
+      </div>
+      <div class="path-body">
+        <div class="path-title">${p.title}</div>
+        <div class="path-desc">${p.desc}</div>
+        <div class="skill-pills">${p.skills.map(s => `<span class="skill-pill">${s}</span>`).join('')}</div>
+        <div class="path-meta">
+          <span>📚 ${p.courses} courses · ⏱ ${p.hours}h</span>
+          <span style="color:var(--clr-electric);font-weight:600">${p.level}</span>
+        </div>
+        <a href="index.html#courses" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:var(--sp-4)">Start Path →</a>
+      </div>
+    </div>
+  `).join('');
+        })();
+    </script>
+</body>
+
+</html>

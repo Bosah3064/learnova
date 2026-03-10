@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard — LearNova</title>
+    <meta name="description"
+        content="Your personal LearNova learning dashboard. Track progress, continue courses, book mentors, and grow your skills." />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        /* ── Dashboard Layout ── */
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h);
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto;
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8) var(--sp-8);
+            background: var(--bg-page);
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 1024px) {
+            .dash-sidebar {
+                display: none;
+            }
+
+            .dash-main {
+                padding: var(--sp-6) var(--sp-5);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .dash-main {
+                padding: var(--sp-4);
+            }
+        }
+
+        /* ── Sidebar ── */
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .sidebar-user .avatar-lg {
+            background: linear-gradient(135deg, #2563EB, #7C3AED);
+        }
+
+        .sidebar-user-info strong {
+            display: block;
+            color: #fff;
+            font-size: var(--text-sm);
+            font-weight: 700;
+        }
+
+        .sidebar-user-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--sp-4) var(--sp-3);
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.25);
+            padding: var(--sp-4) var(--sp-3) var(--sp-2);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3) var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            margin-bottom: 2px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--grad-primary);
+            color: #fff;
+        }
+
+        .sidebar-link .icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            width: 22px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: var(--sp-4) var(--sp-3);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-streak {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            padding: var(--sp-3) var(--sp-4);
+            border-radius: var(--radius-md);
+        }
+
+        .sidebar-streak-icon {
+            font-size: 24px;
+        }
+
+        .sidebar-streak-info strong {
+            display: block;
+            color: #F59E0B;
+            font-size: var(--text-sm);
+        }
+
+        .sidebar-streak-info span {
+            font-size: var(--text-xs);
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ── Dashboard top bar ── */
+        .dash-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--sp-8);
+            gap: var(--sp-4);
+            flex-wrap: wrap;
+        }
+
+        .dash-welcome h1 {
+            font-size: var(--text-2xl);
+            margin-bottom: 4px;
+        }
+
+        .dash-welcome p {
+            font-size: var(--text-sm);
+            color: var(--txt-muted);
+            margin: 0;
+        }
+
+        .dash-topbar-actions {
+            display: flex;
+            gap: var(--sp-3);
+            align-items: center;
+        }
+
+        /* ── Stats row ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--sp-5);
+            margin-bottom: var(--sp-8);
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ── Main grid ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: var(--sp-6);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 300px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Section headers ── */
+        .dash-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--sp-5);
+        }
+
+        .dash-section-header h3 {
+            font-size: var(--text-lg);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .dash-section-header a {
+            font-size: var(--text-sm);
+            color: var(--txt-accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .dash-section-header a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Course progress cards ── */
+        .course-progress-card {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4);
+            padding: var(--sp-4);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-base);
+            cursor: pointer;
+            margin-bottom: var(--sp-3);
+        }
+
+        .course-progress-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--bdr-accent);
+            transform: translateY(-1px);
+        }
+
+        .course-thumb {
+            width: 68px;
+            height: 68px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .course-progress-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .course-progress-title {
+            font-weight: 600;
+            font-size: var(--text-sm);
+            color: var(--txt-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .course-progress-meta {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-bottom: var(--sp-2);
+        }
+
+        .course-progress-pct {
+            font-size: var(--text-xs);
+            color: var(--txt-accent);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* ── Schedule / upcoming ── */
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-4);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--sp-3);
+            transition: all var(--transition-base);
+        }
+
+        .schedule-item:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .schedule-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .schedule-info {
+            flex: 1;
+        }
+
+        .schedule-title {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--txt-primary);
+        }
+
+        .schedule-meta {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 2px;
+        }
+
+        .schedule-time {
+            font-size: var(--text-xs);
+            color: var(--txt-accent);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ── Leaderboard ── */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3) 0;
+            border-bottom: 1px solid var(--bdr-subtle);
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-rank {
+            width: 24px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .rank-1 {
+            color: #F59E0B;
+        }
+
+        .rank-2 {
+            color: #94A3B8;
+        }
+
+        .rank-3 {
+            color: #CD7F32;
+        }
+
+        .leaderboard-name {
+            flex: 1;
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--txt-primary);
+        }
+
+        .leaderboard-xp {
+            font-size: var(--text-xs);
+            color: var(--clr-emerald);
+            font-weight: 700;
+        }
+
+        /* ── XP Progress ring ── */
+        .xp-ring-wrap {
+            text-align: center;
+            padding: var(--sp-5) 0;
+        }
+
+        .xp-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--clr-electric) 0% 68%, var(--bdr-subtle) 68% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--sp-4);
+            box-shadow: var(--shadow-glow-blue);
+            position: relative;
+        }
+
+        .xp-ring-inner {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .xp-ring-value {
+            font-family: var(--font-heading);
+            font-size: var(--text-xl);
+            font-weight: 800;
+            color: var(--txt-primary);
+            line-height: 1;
+        }
+
+        .xp-ring-label {
+            font-size: 10px;
+            color: var(--txt-muted);
+        }
+
+        .xp-level {
+            font-family: var(--font-heading);
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--clr-electric);
+        }
+
+        /* ── Achievement badges ── */
+        .badges-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--sp-3);
+            margin-top: var(--sp-4);
+        }
+
+        .badge-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--sp-1);
+            padding: var(--sp-3);
+            background: var(--bg-card-hover);
+            border-radius: var(--radius-md);
+            min-width: 72px;
+            border: 1px solid var(--bdr-subtle);
+        }
+
+        .badge-item .bi {
+            font-size: 28px;
+        }
+
+        .badge-item span {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--txt-muted);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .badge-item.earned {
+            border-color: var(--bdr-accent);
+            background: rgba(37, 99, 235, 0.06);
+        }
+
+        .badge-item.earned span {
+            color: var(--clr-electric);
+        }
+    </style>
+</head>
+
+<body>
+    <script>(function () { const t = localStorage.getItem('ln-theme'); if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'dark'); })();</script>
+
+    <!-- NAV -->
+    <nav class="nav scrolled" role="navigation" aria-label="Main navigation">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo no-select">
+                <div class="logo-icon">🎓</div>
+                Learn<span>Nova</span>
+            </a>
+            <ul class="nav-links" role="list">
+                <li><a href="index.html#paths">Paths</a></li>
+                <li><a href="index.html#courses">Courses</a></li>
+                <li><a href="index.html#mentors">Mentors</a></li>
+                <li><a href="index.html#community">Community</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="nav-search-btn" aria-label="Search" title="Search (Ctrl+K)"
+                    style="font-size:17px">🔍</button>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme"><span
+                        id="theme-icon">🌙</span></button>
+                <div id="notif-bell" style="position:relative;display:flex;align-items:center">
+                    <button class="theme-toggle" aria-label="Notifications" style="font-size:18px">🔔</button>
+                </div>
+                <div class="streak-display"><span>🔥</span> 21 days</div>
+                <div class="avatar" style="background:linear-gradient(135deg,#2563EB,#7C3AED);cursor:pointer"
+                    title="Edit Profile" data-user-initials data-open-profile>JD</div>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+        <div class="mobile-menu" id="mobile-menu">
+            <a href="index.html#paths">Learning Paths</a>
+            <a href="index.html#courses">Courses</a>
+            <a href="index.html#mentors">Mentors</a>
+            <a href="pricing.html">Pricing</a>
+            <a href="login.html" class="btn btn-primary" style="text-align:center">Sign In</a>
+        </div>
+    </nav>
+
+    <!-- DASHBOARD -->
+    <div class="dash-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="dash-sidebar" aria-label="Dashboard navigation">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);background-size:cover;background-position:center"
+                        data-user-initials style="cursor:pointer">JD</div>
+                    <div class="sidebar-user-info">
+                        <strong data-user-name>Jane Doe</strong>
+                        <span id="sidebar-level-label">Level 1 · Student</span>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link active"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" class="sidebar-link"><span class="icon">💳</span>Billing</a>
+                <a href="#" onclick="signOut(); return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-streak">
+                    <span class="sidebar-streak-icon">🔥</span>
+                    <div class="sidebar-streak-info">
+                        <strong>21-Day Streak!</strong>
+                        <span>Keep it up — 3 days to record</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="dash-main">
+
+            <!-- Top bar -->
+            <div class="dash-topbar">
+                <div class="dash-welcome">
+                    <h1>Good afternoon, <span data-user-name>Jane</span> 👋</h1>
+                    <p>You have 2 live sessions today. Keep up the great momentum!</p>
+                </div>
+                <div class="dash-topbar-actions">
+                    <a href="#" class="btn btn-secondary btn-sm">📅 Schedule</a>
+                    <a href="#" class="btn btn-primary btn-sm">🤖 Ask AI</a>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">📚</div>
+                    <div>
+                        <div class="stat-value" id="stat-courses">—</div>
+                        <div class="stat-label">Courses Active</div>
+                        <div class="stat-change up" id="stat-courses-change">Loading…</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">⏱</div>
+                    <div>
+                        <div class="stat-value" id="stat-hours">—</div>
+                        <div class="stat-label">Hours Learned</div>
+                        <div class="stat-change up">Based on progress</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">🏆</div>
+                    <div>
+                        <div class="stat-value" id="stat-certs">—</div>
+                        <div class="stat-label">Certificates</div>
+                        <div class="stat-change up" id="stat-certs-change">Complete courses</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amber">⚡</div>
+                    <div>
+                        <div class="stat-value" id="stat-xp">—</div>
+                        <div class="stat-label">XP Points</div>
+                        <div class="stat-change up" id="stat-xp-change">Loading…</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Grid -->
+            <div class="dashboard-grid">
+
+                <!-- Left column -->
+                <div>
+                    <!-- Continue Learning -->
+                    <div class="card" style="margin-bottom:var(--sp-6)">
+                        <div class="dash-section-header">
+                            <h3>📚 Continue Learning</h3>
+                            <a href="index.html#courses">Browse all →</a>
+                        </div>
+                        <!-- Filled by student-dashboard.js -->
+                        <div id="continue-learning-list">
+                            <div
+                                style="text-align:center;padding:var(--sp-6);color:var(--txt-muted);font-size:var(--text-sm)">
+                                <span
+                                    style="display:inline-block;animation:spin 1s linear infinite;font-size:1.5rem">⏳</span>
+                                <p style="margin-top:var(--sp-2)">Loading your courses…</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Course Progress (replaces static schedule) -->
+                    <div class="card" style="margin-bottom:var(--sp-6)">
+                        <div class="dash-section-header">
+                            <h3>📈 My Course Progress</h3>
+                            <a href="index.html#courses">Browse more →</a>
+                        </div>
+                        <div id="course-progress-overview">
+                            <div
+                                style="text-align:center;padding:var(--sp-6);color:var(--txt-muted);font-size:var(--text-sm)">
+                                <span
+                                    style="display:inline-block;animation:spin 1s linear infinite;font-size:1.5rem">⏳</span>
+                                <p style="margin-top:var(--sp-2)">Loading progress…</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommended -->
+                    <div class="card">
+                        <div class="dash-section-header">
+                            <h3>⚡ AI Recommended For You</h3>
+                            <a href="index.html#courses">See all →</a>
+                        </div>
+                        <!-- Filled by student-dashboard.js -->
+                        <div id="recommended-list">
+                            <div
+                                style="text-align:center;padding:var(--sp-4);color:var(--txt-muted);font-size:var(--text-sm)">
+                                <span
+                                    style="display:inline-block;animation:spin 1s linear infinite;font-size:1.2rem">⏳</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column -->
+                <div style="display:flex;flex-direction:column;gap:var(--sp-5)">
+
+                    <!-- XP & Level -->
+                    <div class="card">
+                        <h4 style="margin-bottom:var(--sp-4)">⚡ Your XP Progress</h4>
+                        <div class="xp-ring-wrap">
+                            <div class="xp-ring">
+                                <div class="xp-ring-inner">
+                                    <div class="xp-ring-value" id="xp-value">—</div>
+                                    <div class="xp-ring-label">XP</div>
+                                </div>
+                            </div>
+                            <div class="xp-level" id="xp-level">Loading…</div>
+                            <div style="font-size:var(--text-xs);color:var(--txt-muted);margin-top:var(--sp-1)"
+                                id="xp-to-next"></div>
+                        </div>
+                        <div class="progress-wrap">
+                            <div class="progress-bar" id="xp-bar" style="--progress:0%"></div>
+                        </div>
+                        <div
+                            style="display:flex;justify-content:space-between;margin-top:var(--sp-2);font-size:var(--text-xs);color:var(--txt-muted)">
+                            <span id="xp-lvl-current">Level 1</span>
+                            <span id="xp-pct-label" style="color:var(--clr-electric);font-weight:700">0%</span>
+                            <span id="xp-lvl-next">Level 2</span>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="card">
+                        <div class="dash-section-header" style="margin-bottom:var(--sp-4)">
+                            <h4>🏆 Weekly Leaderboard</h4>
+                            <span class="badge badge-amber">Live</span>
+                        </div>
+                        <!-- Real leaderboard rendered by student-dashboard.js -->
+                        <div id="leaderboard-list">
+                            <div
+                                style="text-align:center;padding:var(--sp-4);color:var(--txt-muted);font-size:var(--text-sm)">
+                                <span style="display:inline-block;animation:spin 1s linear infinite">⏳</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements (real badges based on XP) -->
+                    <div class="card">
+                        <div class="dash-section-header" style="margin-bottom:var(--sp-3)">
+                            <h4>🎖 Achievements</h4>
+                            <span id="badge-count"
+                                style="font-size:var(--text-xs);color:var(--txt-muted)">Loading…</span>
+                        </div>
+                        <div class="badges-grid" id="badges-grid">
+                            <!-- Filled dynamically by student-dashboard.js -->
+                        </div>
+                    </div>
+
+                    <!-- AI Quick Ask -->
+                    <div class="card" style="background:var(--grad-primary);border:none;color:#fff">
+                        <div style="font-size:24px;margin-bottom:var(--sp-3)">🤖</div>
+                        <h4 style="color:#fff;margin-bottom:var(--sp-2)">AI Tutor — Always On</h4>
+                        <p style="color:rgba(255,255,255,0.75);font-size:var(--text-sm);margin-bottom:var(--sp-5)">Ask
+                            anything about your courses — get instant explanations, code reviews, and quiz questions.
+                        </p>
+                        <a href="#" class="btn"
+                            style="background:rgba(255,255,255,0.2);color:#fff;border:1.5px solid rgba(255,255,255,0.3);width:100%;justify-content:center">💬
+                            Start Chat</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI Widget -->
+    <div class="ai-widget">
+        <button class="ai-btn" id="ai-btn" aria-label="Open AI Tutor">🤖</button>
+        <div class="ai-chat" id="ai-chat">
+            <div class="ai-chat-header">
+                <div class="ai-avatar">🤖</div>
+                <div><strong>Nova AI</strong><span>Always online</span></div>
+                <button style="margin-left:auto;background:none;border:none;color:#fff;font-size:18px;cursor:pointer"
+                    onclick="document.getElementById('ai-chat').classList.remove('open')">×</button>
+            </div>
+            <div class="ai-chat-messages">
+                <div class="chat-msg"
+                    style="background:var(--bg-card-hover);color:var(--txt-primary);align-self:flex-start">👋 Hi <span
+                        data-user-name>there</span>!
+                    I'm Nova, your AI tutor. What would you like to learn today?</div>
+            </div>
+            <div style="padding:var(--sp-3);border-top:1px solid var(--bdr-subtle);display:flex;gap:var(--sp-2)">
+                <input type="text" placeholder="Ask anything…"
+                    style="flex:1;padding:var(--sp-2) var(--sp-3);border:1.5px solid var(--bdr-subtle);border-radius:var(--radius-md);background:var(--bg-card-hover);color:var(--txt-primary);font-size:var(--text-sm);outline:none"
+                    id="ai-input" />
+                <button class="btn btn-primary btn-sm" onclick="sendAiMsg()">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/student-dashboard.js"></script>
+    <script>
+        document.getElementById('ai-btn').addEventListener('click', function () {
+            document.getElementById('ai-chat').classList.toggle('open');
+        });
+        function sendAiMsg() {
+            const input = document.getElementById('ai-input');
+            const msgs = document.querySelector('.ai-chat-messages');
+            if (!input.value.trim()) return;
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg';
+            userMsg.style.cssText = 'background:var(--grad-primary);color:#fff;align-self:flex-end;margin-left:auto';
+            userMsg.textContent = input.value;
+            msgs.appendChild(userMsg);
+            input.value = '';
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-msg';
+                aiMsg.style.cssText = 'background:var(--bg-card-hover);color:var(--txt-primary);align-self:flex-start';
+                aiMsg.textContent = "Great question! Let me explain that concept with a real-world example…";
+                msgs.appendChild(aiMsg);
+                msgs.scrollTop = msgs.scrollHeight;
+            }, 800);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        document.getElementById('ai-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendAiMsg(); });
+    </script>
+
+    <!-- ══ PROGRESS MODAL ══ -->
+    <div id="progress-overlay"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;backdrop-filter:blur(4px)"
+        class="ln-overlay"></div>
+    <div id="progress-modal"
+        style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;width:min(440px,94vw);background:var(--bg-card);border:1px solid var(--bdr-subtle);border-radius:var(--radius-xl);padding:var(--sp-8);box-shadow:var(--shadow-xl)"
+        class="ln-modal">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-6)">
+            <h3 style="margin:0;font-size:var(--text-lg)">📊 Update Progress</h3>
+            <button onclick="closeProgressModal()"
+                style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt-muted);line-height:1">&times;</button>
+        </div>
+        <div id="pm-title"
+            style="font-size:var(--text-sm);font-weight:600;color:var(--txt-secondary);margin-bottom:var(--sp-6);line-height:1.4">
+        </div>
+        <div style="text-align:center;margin-bottom:var(--sp-4)">
+            <div id="pm-pct-display"
+                style="font-size:3rem;font-weight:800;font-family:var(--font-heading);color:var(--clr-electric);line-height:1">
+                0%</div>
+            <div style="font-size:var(--text-xs);color:var(--txt-muted);margin-top:4px">Course Completion</div>
+        </div>
+        <input id="pm-slider" type="range" min="0" max="100" step="5" value="0"
+            style="width:100%;accent-color:var(--clr-electric);margin-bottom:var(--sp-6);cursor:pointer">
+        <input type="hidden" id="pm-enrollment-id">
+        <input type="hidden" id="pm-total-modules">
+        <div style="display:flex;gap:var(--sp-3)">
+            <button onclick="closeProgressModal()" class="btn btn-secondary" style="flex:1">Cancel</button>
+            <button id="pm-save" class="btn btn-primary" style="flex:2">Save Progress</button>
+        </div>
+    </div>
+
+    <!-- ══ PROFILE MODAL ══ -->
+    <div id="profile-overlay"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;backdrop-filter:blur(4px)"
+        class="ln-overlay"></div>
+    <div id="profile-modal"
+        style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;width:min(480px,94vw);background:var(--bg-card);border:1px solid var(--bdr-subtle);border-radius:var(--radius-xl);padding:var(--sp-8);box-shadow:var(--shadow-xl)"
+        class="ln-modal">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-6)">
+            <h3 style="margin:0">👤 Edit Profile</h3>
+            <button id="pf-close"
+                style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt-muted);line-height:1">&times;</button>
+        </div>
+        <form id="profile-form">
+            <div style="margin-bottom:var(--sp-4)">
+                <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:var(--sp-2)">Full
+                    Name</label>
+                <input id="pf-name" type="text" required placeholder="Your full name"
+                    style="width:100%;padding:var(--sp-3) var(--sp-4);border:1.5px solid var(--bdr-subtle);border-radius:var(--radius-md);background:var(--bg-card-hover);color:var(--txt-primary);font-size:var(--text-sm);outline:none">
+            </div>
+            <div style="margin-bottom:var(--sp-4)">
+                <label
+                    style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:var(--sp-2)">Bio</label>
+                <textarea id="pf-bio" rows="3" placeholder="Tell us about yourself"
+                    style="width:100%;padding:var(--sp-3) var(--sp-4);border:1.5px solid var(--bdr-subtle);border-radius:var(--radius-md);background:var(--bg-card-hover);color:var(--txt-primary);font-size:var(--text-sm);resize:vertical;outline:none"></textarea>
+            </div>
+            <div style="margin-bottom:var(--sp-6)">
+                <label
+                    style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:var(--sp-2)">Role</label>
+                <select id="pf-role"
+                    style="width:100%;padding:var(--sp-3) var(--sp-4);border:1.5px solid var(--bdr-subtle);border-radius:var(--radius-md);background:var(--bg-card-hover);color:var(--txt-primary);font-size:var(--text-sm);outline:none">
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                </select>
+            </div>
+            <div id="pf-msg" style="font-size:var(--text-sm);margin-bottom:var(--sp-3);min-height:20px"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Save
+                Changes</button>
+        </form>
+    </div>
+
+    <style>
+        .ln-modal.open {
+            display: block !important;
+        }
+
+        .ln-overlay.open {
+            display: block !important;
+        }
+    </style>
+
+    <script src="js/profile.js"></script>
+</body>
+
+</html>

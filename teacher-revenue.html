@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Revenue & Payouts — LearNova Teacher</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h);
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto;
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page);
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+        }
+
+        .sidebar-nav {
+            padding: var(--sp-4) var(--sp-3);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: var(--text-sm);
+            text-decoration: none;
+            transition: 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--grad-emerald);
+            color: #fff;
+        }
+
+        .sidebar-link .icon {
+            width: 22px;
+            text-align: center;
+        }
+
+        .revenue-overview {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: var(--sp-6);
+            margin-bottom: var(--sp-8);
+        }
+
+        .revenue-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-6);
+        }
+
+        .payout-card {
+            background: linear-gradient(135deg, #065f46, #064e3b);
+            color: #fff;
+            padding: var(--sp-6);
+            border-radius: var(--radius-xl);
+            border: none;
+        }
+
+        .payout-card h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+
+        .txn-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--sp-4);
+        }
+
+        .txn-table th {
+            padding: var(--sp-3);
+            text-align: left;
+            font-size: 10px;
+            color: var(--txt-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--bdr-subtle);
+        }
+
+        .txn-table td {
+            padding: var(--sp-4) var(--sp-3);
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--bdr-subtle);
+        }
+    </style>
+</head>
+
+<body>
+    <script>(function () { const t = localStorage.getItem('ln-theme'); if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'dark'); })();</script>
+
+    <nav class="nav scrolled">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo no-select">
+                <div class="logo-icon">🎓</div>Learn<span>Nova</span>
+            </a>
+            <div class="nav-actions">
+                <a href="student.html" class="btn btn-ghost btn-sm">Student View</a>
+                <div class="avatar" style="background:linear-gradient(135deg,#10B981,#059669)" data-user-initials>JL
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#10B981,#059669)"
+                        data-user-initials>JL</div>
+                    <div class="sidebar-user-info"><strong data-user-name>Instructor</strong><span>Teacher</span></div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Teach</div>
+                <a href="teacher.html" class="sidebar-link"><span class="icon">📊</span>Dashboard</a>
+                <a href="teacher-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="teacher-students.html" class="sidebar-link"><span class="icon">👥</span>Students</a>
+                <a href="teacher-sessions.html" class="sidebar-link"><span class="icon">📅</span>Sessions</a>
+                <div class="sidebar-section-label">Business</div>
+                <a href="teacher-revenue.html" class="sidebar-link active"><span class="icon">💰</span>Revenue</a>
+                <a href="#" onclick="signOut(); return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <main class="dash-main">
+            <h1 style="font-size:var(--text-2xl);margin-bottom:4px">Revenue & Payouts 💰</h1>
+            <p style="color:var(--txt-muted);font-size:var(--text-sm);margin-bottom:var(--sp-8)">Monitor your earnings
+                and manage your payout settings.</p>
+
+            <div class="revenue-overview">
+                <div class="revenue-card">
+                    <h3 style="font-size:var(--text-base);margin-bottom:var(--sp-4)">Earnings History</h3>
+                    <div
+                        style="height:240px; background:rgba(255,255,255,0.02); border-radius:var(--radius-lg); display:flex; align-items:center; justify-content:center; color:var(--txt-muted); font-size:var(--text-sm)">
+                        Analytics Chart Coming Soon 📈
+                    </div>
+                </div>
+                <div class="payout-card">
+                    <span style="font-size:var(--text-xs); opacity:0.8">AVAILABLE FOR PAYOUT</span>
+                    <h2>$4,120.00</h2>
+                    <p style="font-size:var(--text-xs); margin-bottom:var(--sp-6)">Next autopay: April 1, 2026</p>
+                    <button class="btn btn-emerald"
+                        style="width:100%; background:#fff; color:#064e3b; font-weight:700">Request Instant
+                        Payout</button>
+                    <div
+                        style="margin-top:var(--sp-6); padding-top:var(--sp-4); border-top:1px solid rgba(255,255,255,0.1); font-size:11px">
+                        🏦 Linked: Chase Bank (****9021)
+                    </div>
+                </div>
+            </div>
+
+            <div class="revenue-card">
+                <h3 style="font-size:var(--text-sm); margin-bottom:var(--sp-4)">Recent Transactions</h3>
+                <table class="txn-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mar 08, 2026</td>
+                            <td>Jane Doe</td>
+                            <td>React Masterclass</td>
+                            <td>+$49.00</td>
+                            <td><span class="badge badge-green">Cleared</span></td>
+                        </tr>
+                        <tr>
+                            <td>Mar 07, 2026</td>
+                            <td>John Smith</td>
+                            <td>AWS Pro Prep</td>
+                            <td>+$89.00</td>
+                            <td><span class="badge badge-amber">Pending</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/teacher-dashboard.js"></script>
+</body>
+
+</html>

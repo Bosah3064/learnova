@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Students — LearNova Teacher</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h);
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto;
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page);
+        }
+
+        .sidebar-header {
+            padding: var(--sp-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            padding: var(--sp-3);
+            border-radius: var(--radius-md);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: var(--text-sm);
+            text-decoration: none;
+            transition: 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.07);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: var(--grad-emerald);
+            color: #fff;
+        }
+
+        .sidebar-link .icon {
+            width: 22px;
+            text-align: center;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--sp-4);
+            margin-bottom: var(--sp-6);
+        }
+
+        .stat-mini {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-5);
+            text-align: center;
+        }
+
+        .stat-mini .num {
+            font-size: var(--text-2xl);
+            font-weight: 800;
+            color: var(--txt-primary);
+        }
+
+        .stat-mini .lbl {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 4px;
+        }
+
+        /* Controls */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            margin-bottom: var(--sp-5);
+            flex-wrap: wrap;
+        }
+
+        .controls-row select,
+        .controls-row input {
+            padding: 8px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-md);
+            color: var(--txt-primary);
+            font-size: var(--text-sm);
+            outline: none;
+        }
+
+        .controls-row select:focus,
+        .controls-row input:focus {
+            border-color: var(--clr-emerald);
+        }
+
+        /* Students cards */
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: var(--sp-4);
+        }
+
+        .student-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-5);
+            transition: border-color .2s;
+        }
+
+        .student-card:hover {
+            border-color: rgba(16, 185, 129, .3);
+        }
+
+        .sc-header {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            margin-bottom: var(--sp-4);
+        }
+
+        .sc-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--grad-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .sc-name {
+            font-weight: 600;
+            font-size: var(--text-sm);
+            color: var(--txt-primary);
+        }
+
+        .sc-course {
+            font-size: var(--text-xs);
+            color: var(--txt-muted);
+            margin-top: 2px;
+        }
+
+        .sc-progress-row {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            margin-bottom: var(--sp-3);
+        }
+
+        .sc-bar-track {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-card-hover);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .sc-bar-fill {
+            height: 100%;
+            background: var(--grad-emerald);
+            border-radius: 99px;
+            transition: width .5s;
+        }
+
+        .sc-pct {
+            font-size: var(--text-xs);
+            font-weight: 700;
+            color: var(--txt-primary);
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .sc-meta {
+            display: flex;
+            gap: var(--sp-3);
+            font-size: 11px;
+            color: var(--txt-muted);
+            margin-bottom: var(--sp-4);
+        }
+
+        .sc-actions {
+            display: flex;
+            gap: var(--sp-2);
+        }
+
+        /* Notification modal */
+        .ln-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .65);
+            z-index: 1000;
+            backdrop-filter: blur(6px);
+        }
+
+        .ln-overlay.open {
+            display: block;
+        }
+
+        .notif-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            width: min(520px, 94vw);
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-7);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .notif-modal.open {
+            display: block;
+        }
+
+        .notif-modal h3 {
+            margin: 0 0 var(--sp-5);
+            font-size: var(--text-lg);
+        }
+
+        .form-field {
+            margin-bottom: var(--sp-4);
+        }
+
+        .form-field label {
+            display: block;
+            font-size: var(--text-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--txt-muted);
+            margin-bottom: var(--sp-2);
+        }
+
+        .form-field input,
+        .form-field textarea,
+        .form-field select {
+            width: 100%;
+            padding: var(--sp-3) var(--sp-4);
+            background: var(--bg-card-hover);
+            border: 1.5px solid var(--bdr-subtle);
+            border-radius: var(--radius-md);
+            color: var(--txt-primary);
+            font-size: var(--text-sm);
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus,
+        .form-field select:focus {
+            border-color: var(--clr-emerald);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* Empty */
+        .empty-state {
+            text-align: center;
+            padding: var(--sp-16);
+            color: var(--txt-muted);
+        }
+
+        .empty-state .em-icon {
+            font-size: 3rem;
+            margin-bottom: var(--sp-3);
+        }
+    </style>
+</head>
+
+<body>
+    <script>(function () { const t = localStorage.getItem('ln-theme'); if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme:dark)').matches)) document.documentElement.setAttribute('data-theme', 'dark'); })();</script>
+
+    <nav class="nav scrolled">
+        <div class="container nav-inner">
+            <a href="index.html" class="nav-logo no-select">
+                <div class="logo-icon">🎓</div>Learn<span>Nova</span>
+            </a>
+            <div class="nav-actions">
+                <a href="student.html" class="btn btn-ghost btn-sm">Student View</a>
+                <div class="avatar" style="background:linear-gradient(135deg,#10B981,#059669)" data-user-initials>JL
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div style="display:flex;align-items:center;gap:var(--sp-3)">
+                    <div class="avatar avatar-lg" style="background:linear-gradient(135deg,#10B981,#059669)"
+                        data-user-initials>JL</div>
+                    <div><strong data-user-name>Instructor</strong><span
+                            style="display:block;font-size:11px;color:var(--txt-muted)">Teacher</span></div>
+                </div>
+            </div>
+            <nav style="padding:var(--sp-4) var(--sp-3)">
+                <div class="sidebar-section-label">Instructor</div>
+                <a href="teacher.html" class="sidebar-link"><span class="icon">📊</span>Dashboard</a>
+                <a href="teacher-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="teacher-students.html" class="sidebar-link active"><span class="icon">👥</span>Students</a>
+                <a href="teacher-sessions.html" class="sidebar-link"><span class="icon">📅</span>Sessions</a>
+                <a href="teacher-revenue.html" class="sidebar-link"><span class="icon">💰</span>Revenue</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <main class="dash-main">
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-6);flex-wrap:wrap;gap:var(--sp-3)">
+                <div>
+                    <h1 style="font-size:var(--text-2xl);margin-bottom:4px">Enrolled Students 👥</h1>
+                    <p style="color:var(--txt-muted);font-size:var(--text-sm)">Track progress and send targeted
+                        notifications to your learners.</p>
+                </div>
+                <button class="btn btn-emerald" onclick="openNotifModal(null)">📢 Broadcast to All</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row" id="stats-row">
+                <div class="stat-mini">
+                    <div class="num" id="st-total">—</div>
+                    <div class="lbl">Total Students</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="num" id="st-avg">—</div>
+                    <div class="lbl">Avg. Progress</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="num" id="st-done">—</div>
+                    <div class="lbl">Completed</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="num" id="st-courses">—</div>
+                    <div class="lbl">Courses</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-row">
+                <select id="filter-course" onchange="filterStudents()">
+                    <option value="">All Courses</option>
+                </select>
+                <input type="text" id="search-input" placeholder="🔍 Search student name..." oninput="filterStudents()"
+                    style="flex:1;max-width:300px">
+                <button class="btn btn-ghost btn-sm" id="sort-btn" onclick="toggleSort()">⬇ Sort: Progress</button>
+            </div>
+
+            <div id="students-grid" class="students-grid">
+                <div class="empty-state" style="grid-column:1/-1">
+                    <div class="em-icon">⏳</div>
+                    <p>Loading students…</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="ln-overlay" id="notif-overlay" onclick="closeNotifModal()"></div>
+    <div class="notif-modal" id="notif-modal">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-5)">
+            <h3 style="margin:0">📢 Send Notification</h3>
+            <button onclick="closeNotifModal()"
+                style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt-muted)">&times;</button>
+        </div>
+        <div id="notif-target-info"
+            style="font-size:var(--text-sm);color:var(--txt-muted);margin-bottom:var(--sp-4);padding:var(--sp-3);background:var(--bg-card-hover);border-radius:var(--radius-md)">
+        </div>
+        <div class="form-field">
+            <label>Notification Type</label>
+            <select id="notif-type">
+                <option value="announcement">📣 Announcement</option>
+                <option value="info">ℹ️ Info / Update</option>
+                <option value="warning">⚠️ Important</option>
+            </select>
+        </div>
+        <div class="form-field">
+            <label>Title *</label>
+            <input type="text" id="notif-title" placeholder="e.g. New assignment posted!">
+        </div>
+        <div class="form-field">
+            <label>Message</label>
+            <textarea id="notif-body" placeholder="Write your message to enrolled students…"></textarea>
+        </div>
+        <div style="display:flex;gap:var(--sp-3);justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="closeNotifModal()">Cancel</button>
+            <button class="btn btn-emerald btn-sm" id="send-notif-btn" onclick="sendNotification()">📨 Send to
+                Students</button>
+        </div>
+        <div id="notif-msg" style="margin-top:var(--sp-3);font-size:var(--text-xs);text-align:center"></div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <!-- Removed js/teacher-dashboard.js to avoid render clashing -->
+    <script>
+        // ── Students Page Script ───────────────────────────────────────
+        let allEnrollments = [];
+        let allCourses = [];
+        let notifTargetCourseId = null;   // null = broadcast to all
+        let notifTargetStudentId = null;  // if single student
+        let sortAsc = false;
+
+        async function initStudentsPage() {
+            try {
+                // 1. Wait for Auth
+                await new Promise(r => {
+                    if (window.LN_USER) return r();
+                    const t = setInterval(() => { if (window.LN_USER) { clearInterval(t); r(); } }, 50);
+                    setTimeout(() => { clearInterval(t); r(); }, 5000);
+                });
+
+                const userId = window.LN_USER?.id;
+                if (!userId) {
+                    console.error('No User ID found');
+                    document.getElementById('students-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="em-icon">🔑</div><p>Session timed out. Please <a href="login.html">login</a> again.</p></div>';
+                    return;
+                }
+
+                // 2. Fetch teacher's courses
+                const { data: courses, error: cError } = await supabaseClient
+                    .from('courses').select('id, title, modules_count, students_count')
+                    .eq('instructor_id', userId);
+
+                if (cError) throw cError;
+                allCourses = courses || [];
+                document.getElementById('st-courses').textContent = allCourses.length;
+
+                if (!allCourses.length) {
+                    document.getElementById('st-total').textContent = '0';
+                    document.getElementById('st-avg').textContent = '0%';
+                    document.getElementById('st-done').textContent = '0';
+                    document.getElementById('students-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="em-icon">📚</div><p>No courses yet. Create a course to see enrolled students.</p></div>';
+                    return;
+                }
+
+                // 3. Populate course filter
+                const sel = document.getElementById('filter-course');
+                sel.innerHTML = '<option value="">All Courses</option>';
+                allCourses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id; opt.textContent = c.title;
+                    sel.appendChild(opt);
+                });
+
+                // 4. Fetch all enrollments
+                const courseIds = allCourses.map(c => c.id);
+                const { data: enrollments, error: eError } = await supabaseClient
+                    .from('enrollments')
+                    .select(`
+                        id, progress_pct, current_module, last_accessed, enrolled_at, course_id,
+                        courses(id,title,modules_count),
+                        profiles(id,full_name)
+                    `)
+                    .in('course_id', courseIds)
+                    .order('last_accessed', { ascending: false });
+
+                if (eError) throw eError;
+                allEnrollments = enrollments || [];
+
+                updateStats();
+                renderStudents(allEnrollments);
+
+            } catch (err) {
+                console.error('Students page initialization error:', err);
+                document.getElementById('students-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="em-icon">⚠️</div><p>Error loading students: ' + err.message + '</p></div>';
+            }
+        }
+
+        function updateStats() {
+            const total = allEnrollments.length;
+            const avg = total ? Math.round(allEnrollments.reduce((s, e) => s + (e.progress_pct || 0), 0) / total) : 0;
+            const done = allEnrollments.filter(e => (e.progress_pct || 0) >= 100).length;
+            document.getElementById('st-total').textContent = total;
+            document.getElementById('st-avg').textContent = avg + '%';
+            document.getElementById('st-done').textContent = done;
+        }
+
+        function filterStudents() {
+            const courseId = document.getElementById('filter-course').value;
+            const search = document.getElementById('search-input').value.toLowerCase();
+            let filtered = allEnrollments.filter(e => {
+                const matchCourse = !courseId || e.course_id === courseId;
+                const matchSearch = !search || (e.profiles?.full_name || '').toLowerCase().includes(search);
+                return matchCourse && matchSearch;
+            });
+            renderStudents(filtered);
+        }
+
+        function toggleSort() {
+            sortAsc = !sortAsc;
+            document.getElementById('sort-btn').textContent = (sortAsc ? '⬆' : '⬇') + ' Sort: Progress';
+            filterStudents();
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function renderStudents(enrollments) {
+            const grid = document.getElementById('students-grid');
+            if (!enrollments.length) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="em-icon">🔍</div><p>No students match your filters.</p></div>';
+                return;
+            }
+
+            const sorted = [...enrollments].sort((a, b) => {
+                const diff = (a.progress_pct || 0) - (b.progress_pct || 0);
+                return sortAsc ? diff : -diff;
+            });
+
+            const avatarColors = ['linear-gradient(135deg,#10B981,#059669)', 'linear-gradient(135deg,#6366F1,#8B5CF6)', 'linear-gradient(135deg,#F59E0B,#D97706)', 'linear-gradient(135deg,#EC4899,#DB2777)', 'linear-gradient(135deg,#3B82F6,#1D4ED8)'];
+
+            grid.innerHTML = sorted.map((e, i) => {
+                const name = e.profiles?.full_name || 'Unknown Student';
+                const initials = getInitials(name);
+                const courseTitle = e.courses?.title || '';
+                const pct = e.progress_pct || 0;
+                const lastActive = e.last_accessed ? new Date(e.last_accessed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Never';
+                const enrolled = e.enrolled_at ? new Date(e.enrolled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+                const color = avatarColors[i % avatarColors.length];
+                const statusEmoji = pct >= 100 ? '🏆' : pct >= 50 ? '🔥' : pct > 0 ? '📖' : '🆕';
+                const modTotal = e.courses?.modules_count || 0;
+                const modDone = modTotal ? Math.round(pct / 100 * modTotal) : 0;
+
+                return '<div class="student-card">' +
+                    '<div class="sc-header">' +
+                    '<div class="sc-avatar" style="background:' + color + '">' + initials + '</div>' +
+                    '<div style="flex:1;min-width:0">' +
+                    '<div class="sc-name">' + name + '</div>' +
+                    '<div class="sc-course">' + courseTitle + '</div>' +
+                    '</div>' +
+                    '<span style="font-size:18px" title="' + (pct >= 100 ? 'Completed' : pct > 0 ? 'In progress' : 'Not started') + '">' + statusEmoji + '</span>' +
+                    '</div>' +
+                    '<div class="sc-progress-row">' +
+                    '<div class="sc-bar-track"><div class="sc-bar-fill" style="width:' + pct + '%"></div></div>' +
+                    '<div class="sc-pct">' + pct + '%</div>' +
+                    '</div>' +
+                    '<div class="sc-meta">' +
+                    '<span>📦 ' + modDone + '/' + modTotal + ' modules</span>' +
+                    '<span>📅 Active: ' + lastActive + '</span>' +
+                    '<span>🎯 Enrolled: ' + enrolled + '</span>' +
+                    '</div>' +
+                    '<div class="sc-actions">' +
+                    '<button class="btn btn-ghost btn-xs" style="flex:1" onclick="openNotifModal(\'' + e.course_id + '\', \'' + (e.profiles?.id || '') + '\', \'' + name + '\')">📨 Notify</button>' +
+                    '<button class="btn btn-ghost btn-xs" style="flex:1" onclick="openNotifModal(\'' + e.course_id + '\', null, null)">📢 Notify Course</button>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        // ── Notification Modal ─────────────────────────────────────────
+        function openNotifModal(courseId, studentId, studentName) {
+            notifTargetCourseId = courseId;
+            notifTargetStudentId = studentId;
+
+            const infoEl = document.getElementById('notif-target-info');
+            if (studentId && studentName) {
+                infoEl.innerHTML = '👤 Sending to: <strong>' + studentName + '</strong> (1 student)';
+            } else if (courseId) {
+                const c = allCourses.find(c => c.id === courseId);
+                infoEl.innerHTML = '📚 Sending to all students in: <strong>' + (c?.title || courseId) + '</strong>';
+            } else {
+                infoEl.innerHTML = '🌐 Broadcasting to <strong>all enrolled students</strong> across all your courses';
+            }
+
+            document.getElementById('notif-title').value = '';
+            document.getElementById('notif-body').value = '';
+            document.getElementById('notif-msg').textContent = '';
+            document.getElementById('notif-overlay').classList.add('open');
+            document.getElementById('notif-modal').classList.add('open');
+        }
+
+        function closeNotifModal() {
+            document.getElementById('notif-overlay').classList.remove('open');
+            document.getElementById('notif-modal').classList.remove('open');
+        }
+
+        async function sendNotification() {
+            const title = document.getElementById('notif-title').value.trim();
+            const message = document.getElementById('notif-body').value.trim();
+            const type = document.getElementById('notif-type').value;
+            const msgEl = document.getElementById('notif-msg');
+            const btn = document.getElementById('send-notif-btn');
+
+            if (!title) { msgEl.style.color = '#f87171'; msgEl.textContent = '⚠️ Title is required'; return; }
+
+            btn.disabled = true; btn.textContent = '📨 Sending…';
+            msgEl.textContent = '';
+
+            const userId = window.LN_USER?.id;
+
+            // Build recipient list
+            let recipientIds = [];
+            if (notifTargetStudentId) {
+                recipientIds = [notifTargetStudentId];
+            } else if (notifTargetCourseId) {
+                recipientIds = allEnrollments
+                    .filter(e => e.course_id === notifTargetCourseId && e.profiles?.id)
+                    .map(e => e.profiles.id);
+            } else {
+                recipientIds = [...new Set(allEnrollments.filter(e => e.profiles?.id).map(e => e.profiles.id))];
+            }
+
+            if (!recipientIds.length) {
+                msgEl.style.color = '#f87171'; msgEl.textContent = 'No recipients found.';
+                btn.disabled = false; btn.textContent = '📨 Send to Students';
+                return;
+            }
+
+            // Send notifications in batch
+            const rows = recipientIds.map(uid => ({
+                user_id: uid,
+                sender_id: userId,
+                course_id: notifTargetCourseId || null,
+                title,
+                message,
+                type
+            }));
+
+            const { error } = await supabaseClient.from('notifications').insert(rows);
+
+            btn.disabled = false; btn.textContent = '📨 Send to Students';
+
+            if (error) {
+                msgEl.style.color = '#f87171'; msgEl.textContent = 'Error: ' + error.message;
+            } else {
+                msgEl.style.color = '#10B981';
+                msgEl.textContent = '✅ Sent to ' + recipientIds.length + ' student' + (recipientIds.length !== 1 ? 's' : '') + '!';
+                setTimeout(closeNotifModal, 1500);
+            }
+        }
+
+        initStudentsPage();
+    </script>
+</body>
+
+</html>

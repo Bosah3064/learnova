@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Schedule — LearNova</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <style>
+        .dash-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-h)
+        }
+
+        .dash-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            min-height: calc(100vh - var(--nav-h));
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: var(--nav-h);
+            height: calc(100vh - var(--nav-h));
+            overflow-y: auto
+        }
+
+        .dash-main {
+            flex: 1;
+            padding: var(--sp-8);
+            background: var(--bg-page)
+        }
+
+        @media(max-width:1024px) {
+            .dash-sidebar {
+                display: none
+            }
+        }
+
+        .calendar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column
+        }
+
+        .calendar-header {
+            padding: var(--sp-6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--bdr-subtle);
+            background: rgba(255, 255, 255, 0.02)
+        }
+
+        .calendar-month-nav {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-4)
+        }
+
+        .calendar-month-nav h2 {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--txt-primary);
+            min-width: 140px;
+            text-align: center
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--bdr-subtle);
+            background: var(--bg-card-hover);
+            color: var(--txt-primary);
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .nav-btn:hover {
+            background: var(--clr-electric);
+            color: #fff;
+            border-color: var(--clr-electric)
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr)
+        }
+
+        .calendar-day-label {
+            padding: var(--sp-3);
+            text-align: center;
+            font-size: var(--text-xs);
+            font-weight: 700;
+            color: var(--txt-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-bottom: 1px solid var(--bdr-subtle)
+        }
+
+        .calendar-day {
+            min-height: 100px;
+            padding: var(--sp-2);
+            border-right: 1px solid var(--bdr-subtle);
+            border-bottom: 1px solid var(--bdr-subtle);
+            position: relative;
+            transition: background 0.2s
+        }
+
+        .calendar-day:nth-child(7n) {
+            border-right: none
+        }
+
+        .calendar-day.empty {
+            background: rgba(255, 255, 255, 0.01)
+        }
+
+        .calendar-day.today {
+            background: rgba(37, 99, 235, 0.05)
+        }
+
+        .day-num {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--txt-muted);
+            margin-bottom: var(--sp-2);
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%
+        }
+
+        .calendar-day.today .day-num {
+            background: var(--grad-primary);
+            color: #fff
+        }
+
+        .calendar-event {
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            cursor: pointer;
+            border-left: 3px solid transparent
+        }
+
+        .event-session {
+            background: rgba(37, 99, 235, 0.15);
+            color: #60a5fa;
+            border-left-color: #2563eb
+        }
+
+        .event-deadline {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-left-color: #ef4444
+        }
+
+        .event-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border-left-color: #10b981
+        }
+
+        .schedule-meta {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: var(--sp-6);
+            margin-top: var(--sp-6)
+        }
+
+        @media(max-width:960px) {
+            .schedule-meta {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .side-card {
+            background: var(--bg-card);
+            border: 1px solid var(--bdr-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--sp-6)
+        }
+
+        .legend {
+            display: flex;
+            gap: var(--sp-4);
+            font-size: var(--text-xs);
+            color: var(--txt-muted)
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2)
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-logo"><span>Learn</span><span class="logo-accent">Nova</span></a>
+        <div class="nav-actions">
+            <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#2563EB,#7C3AED)" data-user-initials>
+                JD</div>
+        </div>
+    </nav>
+    <div class="dash-layout">
+        <aside class="dash-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-user">
+                    <div class="avatar avatar-lg" id="sb-avatar"
+                        style="background:linear-gradient(135deg,#2563EB,#7C3AED);background-size:cover;background-position:center"
+                        data-user-initials>JD</div>
+                    <div class="sidebar-user-info"><strong data-user-name>Learner</strong><span
+                            id="sidebar-level-label">Level 1 · Student</span></div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Main</div>
+                <a href="student.html" class="sidebar-link"><span class="icon">🏠</span>Dashboard</a>
+                <a href="my-courses.html" class="sidebar-link"><span class="icon">📚</span>My Courses</a>
+                <a href="paths.html" class="sidebar-link"><span class="icon">🗺</span>Learning Paths</a>
+                <a href="schedule.html" class="sidebar-link active"><span class="icon">📅</span>Schedule</a>
+                <div class="sidebar-section-label">Learn</div>
+                <a href="ai-tutor.html" class="sidebar-link"><span class="icon">🤖</span>AI Tutor</a>
+                <a href="mentors.html" class="sidebar-link"><span class="icon">👩‍💼</span>Find Mentor</a>
+                <a href="certificates.html" class="sidebar-link"><span class="icon">🏆</span>Certificates</a>
+                <a href="community.html" class="sidebar-link"><span class="icon">🌍</span>Community</a>
+                <div class="sidebar-section-label">Account</div>
+                <a href="profile.html" class="sidebar-link"><span class="icon">👤</span>Profile</a>
+                <a href="#" class="sidebar-link"><span class="icon">⚙️</span>Settings</a>
+                <a href="#" onclick="signOut();return false;" class="sidebar-link"><span class="icon">🚪</span>Sign
+                    Out</a>
+            </nav>
+        </aside>
+
+        <main class="dash-main">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--sp-6);">
+                <div>
+                    <h1 style="font-size:1.5rem;font-weight:800;color:var(--txt-primary)">📅 My Schedule</h1>
+                    <p style="color:var(--txt-muted);font-size:var(--text-sm);margin-top:var(--sp-1)">Manage your
+                        sessions, deadlines and learning activities.</p>
+                </div>
+                <div class="legend">
+                    <div class="legend-item"><span class="dot" style="background: #2563eb"></span> Mentor Sessions</div>
+                    <div class="legend-item"><span class="dot" style="background: #10b981"></span> Course Study</div>
+                    <div class="legend-item"><span class="dot" style="background: #ef4444"></span> Deadlines</div>
+                </div>
+            </div>
+
+            <div class="calendar-card">
+                <div class="calendar-header">
+                    <div class="calendar-month-nav">
+                        <button class="nav-btn" onclick="prevMonth()">‹</button>
+                        <h2 id="current-month-display">January 2024</h2>
+                        <button class="nav-btn" onclick="nextMonth()">›</button>
+                    </div>
+                    <button class="btn btn-primary btn-sm"
+                        onclick="alert('Google/Outlook Calendar sync coming soon!')">🔗 Sync Calendar</button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-label">Sun</div>
+                    <div class="calendar-day-label">Mon</div>
+                    <div class="calendar-day-label">Tue</div>
+                    <div class="calendar-day-label">Wed</div>
+                    <div class="calendar-day-label">Thu</div>
+                    <div class="calendar-day-label">Fri</div>
+                    <div class="calendar-day-label">Sat</div>
+                </div>
+                <div class="calendar-grid" id="calendar-body">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+
+            <div class="schedule-meta">
+                <div class="side-card">
+                    <h3
+                        style="font-size: 1.1rem; font-weight: 700; color: var(--txt-primary); margin-bottom: var(--sp-4);">
+                        Upcoming Events</h3>
+                    <div id="upcoming-events-list">
+                        <!-- Loaded via JS -->
+                        <div style="color: var(--txt-muted); font-size: var(--text-sm);">No upcoming sessions scheduled.
+                        </div>
+                    </div>
+                </div>
+                <div class="side-card"
+                    style="background: linear-gradient(135deg, #7c2d12, #ef4444); border: none; color: #fff;">
+                    <div style="font-size: 2rem; margin-bottom: var(--sp-2);">🔥</div>
+                    <div style="font-size: 2.5rem; font-weight: 900;" id="streak-num">0</div>
+                    <div style="font-size: var(--text-sm); opacity: 0.9;">Day Learning Streak</div>
+                    <p style="font-size: 11px; margin-top: var(--sp-4); opacity: 0.7;">Study for at least 30 minutes
+                        today to keep your streak alive!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script>
+        let currentYear, currentMonth;
+        const MOCK_EVENTS = [
+            { date: new Date().getDate(), title: 'React Performance Audit', type: 'session' },
+            { date: new Date().getDate() + 2, title: 'JS Fundamentals Quiz', type: 'deadline' },
+            { date: new Date().getDate() - 1, title: 'Finished Module 4', type: 'active' }
+        ];
+
+        async function initCalendar() {
+            await new Promise(r => { if (window.LN_USER) return r(); const t = setInterval(() => { if (window.LN_USER) { clearInterval(t); r(); } }, 50); });
+            const now = new Date();
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth();
+            renderCalendar();
+            loadStreak();
+        }
+
+        function renderCalendar() {
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('current-month-display').innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const body = document.getElementById('calendar-body');
+            body.innerHTML = '';
+
+            // Empty cells before start of month
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day empty';
+                body.appendChild(empty);
+            }
+
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                    cell.classList.add('today');
+                }
+
+                cell.innerHTML = `<span class="day-num">${day}</span>`;
+
+                // Add sample events
+                MOCK_EVENTS.forEach(ev => {
+                    if (ev.date === day) {
+                        const evtEl = document.createElement('div');
+                        evtEl.className = `calendar-event event-${ev.type}`;
+                        evtEl.innerText = ev.title;
+                        cell.appendChild(evtEl);
+                    }
+                });
+
+                body.appendChild(cell);
+            }
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        async function loadStreak() {
+            const userId = window.LN_USER?.id;
+            const { data: prof } = await supabaseClient.from('profiles').select('xp').eq('id', userId).single();
+            if (prof) {
+                // Mock streak calculation for visual
+                document.getElementById('streak-num').innerText = Math.floor(prof.xp / 100) || 1;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initCalendar);
+    </script>
+</body>
+
+</html>
